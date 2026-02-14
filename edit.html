@@ -474,7 +474,7 @@
     </div>
 
     <div class="sticky-footer">
-        <button class="save-btn" onclick="generateLink()">
+        <button class="save-btn" onclick="saveJourney()">
             <span>✨ Save & Generate Link</span>
         </button>
     </div>
@@ -500,175 +500,58 @@ const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Create or get ID
 let journeyId = localStorage.getItem("journey_id");
-
 if (!journeyId) {
   journeyId = crypto.randomUUID();
   localStorage.setItem("journey_id", journeyId);
 }
 
-async function saveToSupabase(data) {
+// SAVE FUNCTION
+async function saveJourney() {
+  const inputs = document.querySelectorAll(".data-field");
+  let data = {};
+
+  inputs.forEach(input => {
+    if (input.value.trim() !== "") {
+      data[input.id] = input.value.trim();
+    }
+  });
+
   const { error } = await supabase
-    .from("journeys1")   // ✅ YOUR TABLE NAME
+    .from("journeys1")
     .upsert({
       id: journeyId,
       data: data
     });
 
   if (error) {
-    console.error("Save error:", error);
+    alert("Error saving");
+    console.log(error);
   } else {
-    console.log("Saved successfully");
+    const link = window.location.origin + "/view.html?id=" + journeyId;
+    document.getElementById("finalLink").innerText = link;
+    document.getElementById("linkModal").classList.add("active");
   }
 }
 
-function generateLink() {
-  const inputs = document.querySelectorAll(".data-field");
-  let data = {};
+// LOAD FUNCTION
+async function loadJourney() {
+  const { data } = await supabase
+    .from("journeys1")
+    .select("*")
+    .eq("id", journeyId)
+    .single();
 
-  inputs.forEach(input => {
-    if(input.value.trim() !== ""){
-      data[input.id] = input.value.trim();
-    }
-  });
-
-  saveToSupabase(data);
-
-  const finalURL = `${window.location.origin}/view.html?id=${journeyId}`;
-  alert("Share this link:\n\n" + finalURL);
-}
-</script>
-
-    <script>
-        // --- 1. ELEMENT SELECTION ---
-        const inputs = document.querySelectorAll('.data-field');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const modal = document.getElementById('linkModal');
-        const finalLinkDisplay = document.getElementById('finalLink');
-
-        // --- 2. RESTORE DATA ON LOAD ---
-        window.addEventListener('DOMContentLoaded', () => {
-            inputs.forEach(input => {
-                const savedValue = localStorage.getItem(input.id);
-                if (savedValue) {
-                    input.value = savedValue;
-                }
-                
-                // Attach auto-save listener
-                input.addEventListener('input', () => {
-                    localStorage.setItem(input.id, input.value);
-                    showSaveStatus();
-                });
-            });
-        });
-
-        // --- 3. AUTO-SAVE FEEDBACK ---
-        let saveTimeout;
-        function showSaveStatus() {
-            statusIndicator.classList.add('show');
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                statusIndicator.classList.remove('show');
-            }, 1000);
-        }
-
-        // --- 4. GENERATE LINK LOGIC ---
-  function generateLink() {
-    const data = {};
-    inputs.forEach(input => {
-        if(input.value.trim() !== "") {
-            data[input.id] = input.value.trim();
-        }
+  if (data && data.data) {
+    Object.keys(data.data).forEach(key => {
+      const el = document.getElementById(key);
+      if (el) el.value = data.data[key];
     });
-
-    try {
-        const jsonString = JSON.stringify(data);
-        const encodedData = btoa(encodeURIComponent(jsonString));
-
-        const baseURL = window.location.origin + "/index.html";
-        const finalURL = `${baseURL}?memory=${encodedData}`;
-
-        finalLinkDisplay.innerText = finalURL;
-        modal.classList.add('active');
-
-    } catch (e) {
-        alert("Error generating link.");
-        console.error(e);
-    }
-}
-        // --- 5. MODAL ACTIONS ---
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-
-        function copyLink() {
-            const linkText = finalLinkDisplay.innerText;
-            navigator.clipboard.writeText(linkText).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                const originalText = btn.innerText;
-                btn.innerText = "Copied! ❤️";
-                setTimeout(() => btn.innerText = originalText, 2000);
-            });
-        }
-
-        // Close modal on outside click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-
-    </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-const SUPABASE_URL = "https://ejovamwaphbetuozuhbu.supabase.co";
-const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Create or get journey ID
-let journeyId = localStorage.getItem("journey_id");
-if (!journeyId) {
-  journeyId = crypto.randomUUID();
-  localStorage.setItem("journey_id", journeyId);
+  }
 }
 
-// Auto-save on input
-async function saveToSupabase() {
-  const data = {};
-  document.querySelectorAll(".data-field").forEach(el => {
-    if (el.value.trim() !== "") {
-      data[el.id] = el.value;
-    }
-  });
-
-  await fetch(`${SUPABASE_URL}/rest/v1/journeys`, {
-    method: "POST",
-    headers: {
-      "apikey": SUPABASE_KEY,
-      "Authorization": "Bearer " + SUPABASE_KEY,
-      "Content-Type": "application/json",
-      "Prefer": "resolution=merge-duplicates"
-    },
-    body: JSON.stringify({
-      id: journeyId,
-      data: JSON.stringify(data)
-    })
-  });
-}
-
-// Attach auto-save
-document.addEventListener("input", () => {
-  saveToSupabase();
-});
-
-// Modified link generator (Supabase based)
-function generateLink() {
-  const baseURL = window.location.origin + "/index.html";
-  const finalURL = baseURL + "?id=" + journeyId;
-
-  document.getElementById("finalLink").innerText = finalURL;
-  document.getElementById("linkModal").classList.add("active");
-}
+window.addEventListener("DOMContentLoaded", loadJourney);
 </script>
 </body>
 </html>
