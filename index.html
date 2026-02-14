@@ -3,81 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loading Love Story...</title>
+<title>Create Your Love Story</title>
 
 <style>
 body{
-  background:black;
-  color:white;
+  margin:0;
+  height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  height:100vh;
+  background:linear-gradient(135deg,#ff6a88,#ff99ac);
   font-family:sans-serif;
+  color:white;
+  text-align:center;
+}
+.card{
+  background:rgba(255,255,255,0.1);
+  padding:40px;
+  border-radius:20px;
+  backdrop-filter:blur(10px);
+}
+button{
+  margin-top:20px;
+  padding:14px 28px;
+  border:none;
+  border-radius:30px;
+  font-size:18px;
+  background:white;
+  color:#ff4d6d;
+  cursor:pointer;
 }
 </style>
 </head>
+
 <body>
-Loading your love story...
-
-<script>
-(function () {
-  const params = new URLSearchParams(window.location.search);
-  const memory = params.get("memory");
-
-  if (memory) {
-    try {
-      const jsonString = decodeURIComponent(atob(memory));
-      localStorage.setItem("journey_data", jsonString);
-    } catch (e) {
-      console.error("Memory load failed", e);
-    }
-  }
-
-  // Always redirect to first page
-  window.location.href = "pinky_promise.html";
-})();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-const SUPABASE_URL = "https://ejovamwaphbetuozuhbu.supabase.co";
-const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Get journey ID from URL
-const params = new URLSearchParams(window.location.search);
-const journeyId = params.get("id");
-
-async function loadJourney() {
-  if (!journeyId) return;
-
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/journeys?id=eq.${journeyId}`,
-    {
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": "Bearer " + SUPABASE_KEY
-      }
-    }
-  );
-
-  const data = await res.json();
-
-  if (data && data.length > 0) {
-    const journeyData = JSON.parse(data[0].data);
-
-    // Save locally for all pages
-    localStorage.setItem("journey_data", JSON.stringify(journeyData));
-
-    // Redirect to first page
-    window.location.href = "pinky_promise.html";
-  }
-}
-
-loadJourney();
-</script>
-
+<div class="card">
+  <h1>Create Your Love Story</h1>
+  <p>Build a romantic journey and share it.</p>
+  <button onclick="location.href='edit.html'">
+    Start Creating
+  </button>
+</div>
 </body>
 </html>
