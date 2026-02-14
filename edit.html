@@ -492,6 +492,52 @@
             <button class="copy-btn" onclick="copyLink()">Copy Link</button>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://ejovamwaphbetuozuhbu.supabase.co";
+const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let journeyId = localStorage.getItem("journey_id");
+
+if (!journeyId) {
+  journeyId = crypto.randomUUID();
+  localStorage.setItem("journey_id", journeyId);
+}
+
+async function saveToSupabase(data) {
+  const { error } = await supabase
+    .from("journeys1")   // ✅ YOUR TABLE NAME
+    .upsert({
+      id: journeyId,
+      data: data
+    });
+
+  if (error) {
+    console.error("Save error:", error);
+  } else {
+    console.log("Saved successfully");
+  }
+}
+
+function generateLink() {
+  const inputs = document.querySelectorAll(".data-field");
+  let data = {};
+
+  inputs.forEach(input => {
+    if(input.value.trim() !== ""){
+      data[input.id] = input.value.trim();
+    }
+  });
+
+  saveToSupabase(data);
+
+  const finalURL = `${window.location.origin}/view.html?id=${journeyId}`;
+  alert("Share this link:\n\n" + finalURL);
+}
+</script>
 
     <script>
         // --- 1. ELEMENT SELECTION ---
