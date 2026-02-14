@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Love Story</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  padding:40px;
+  font-family:sans-serif;
+  background:linear-gradient(135deg,#ff6a88,#ff99ac);
+  color:white;
+}
+h1{
+  text-align:center;
+}
+.card{
+  background:rgba(255,255,255,0.1);
+  padding:20px;
+  margin:20px 0;
+  border-radius:15px;
+  backdrop-filter:blur(10px);
+}
+</style>
+</head>
+
+<body>
+
+<h1 id="title">Our Love Story 💖</h1>
+
+<div class="card">
+  <h2 id="user_name"></h2>
+  <h2 id="partner_name"></h2>
+  <p id="start_date"></p>
+</div>
+
+<div class="card">
+  <p id="mem_msg"></p>
+</div>
+
+<div class="card">
+  <h2 id="prop_question"></h2>
+</div>
+
+<script>
+const SUPABASE_URL = "https://ejovamwaphbetuozuhbu.supabase.co";
+const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Get ID from URL
+const params = new URLSearchParams(window.location.search);
+const journeyId = params.get("id");
+
+async function loadData() {
+  if (!journeyId) return alert("Invalid link");
+
+  const { data } = await supabase
+    .from("journeys1")
+    .select("*")
+    .eq("id", journeyId)
+    .single();
+
+  if (data && data.data) {
+    Object.keys(data.data).forEach(key => {
+      const el = document.getElementById(key);
+      if (el) el.innerText = data.data[key];
+    });
+  }
+}
+
+loadData();
+</script>
+
+</body>
+</html>
