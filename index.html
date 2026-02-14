@@ -44,5 +44,26 @@ button{
     Start Creating
   </button>
 </div>
+
+<script>
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const memory = params.get("memory");
+
+  if (memory) {
+    try {
+      const jsonString = decodeURIComponent(atob(memory));
+      localStorage.setItem("journey_data", jsonString);
+
+      // 👇 YAHAN APNI FIRST STORY FILE KA NAAM LIKHO
+      window.location.href = "pinky_promise_unlock.html";
+
+    } catch (e) {
+      console.error("Memory load failed", e);
+    }
+  }
+})();
+</script>
+
 </body>
 </html>
