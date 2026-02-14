@@ -474,7 +474,7 @@
     </div>
 
     <div class="sticky-footer">
-        <button class="save-btn" onclick="saveJourney()">
+        <button class="save-btn" onclick="generateLink()">
             <span>✨ Save & Generate Link</span>
         </button>
     </div>
@@ -500,15 +500,16 @@ const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Create or get ID
+// Create or get journey ID
 let journeyId = localStorage.getItem("journey_id");
 if (!journeyId) {
   journeyId = crypto.randomUUID();
   localStorage.setItem("journey_id", journeyId);
 }
 
-// SAVE FUNCTION
-async function saveJourney() {
+// Save & Generate Link
+async function generateLink() {
+
   const inputs = document.querySelectorAll(".data-field");
   let data = {};
 
@@ -518,6 +519,7 @@ async function saveJourney() {
     }
   });
 
+  // Save to Supabase
   const { error } = await supabase
     .from("journeys1")
     .upsert({
@@ -526,32 +528,17 @@ async function saveJourney() {
     });
 
   if (error) {
-    alert("Error saving");
-    console.log(error);
-  } else {
-    const link = window.location.origin + "/view.html?id=" + journeyId;
-    document.getElementById("finalLink").innerText = link;
-    document.getElementById("linkModal").classList.add("active");
+    alert("Save failed ❌");
+    console.error(error);
+    return;
   }
+
+  // Generate final link
+  const finalURL = window.location.origin + "/view.html?id=" + journeyId;
+
+  document.getElementById("finalLink").innerText = finalURL;
+  document.getElementById("linkModal").classList.add("active");
 }
-
-// LOAD FUNCTION
-async function loadJourney() {
-  const { data } = await supabase
-    .from("journeys1")
-    .select("*")
-    .eq("id", journeyId)
-    .single();
-
-  if (data && data.data) {
-    Object.keys(data.data).forEach(key => {
-      const el = document.getElementById(key);
-      if (el) el.value = data.data[key];
-    });
-  }
-}
-
-window.addEventListener("DOMContentLoaded", loadJourney);
 </script>
 </body>
 </html>
