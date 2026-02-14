@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Your Golden Invitation</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold-primary: #d4af37;
+            --gold-light: #f9e29c;
+            --gold-dark: #8a6d3b;
+            --velvet-bg: #050407;
+            --text-gold: #f3e5ab;
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--velvet-bg);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-body);
+            perspective: 1500px;
+        }
+
+        /* --- BACKGROUND LAYER --- */
+        #starfield {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            filter: blur(50px);
+        }
+
+        /* --- CINEMATIC INTRO TEXT --- */
+        .intro-container {
+            position: absolute;
+            text-align: center;
+            z-index: 10;
+            padding: 0 40px;
+        }
+
+        .intro-text {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-style: italic;
+            opacity: 0;
+            line-height: 1.6;
+            color: var(--text-gold);
+            transform: translateY(20px);
+        }
+
+        .animate-intro {
+            animation: introFlow 6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes introFlow {
+            0% { opacity: 0; transform: translateY(20px); filter: blur(10px); }
+            20% { opacity: 1; transform: translateY(0); filter: blur(0); }
+            80% { opacity: 1; transform: translateY(0); filter: blur(0); }
+            100% { opacity: 0; transform: translateY(-30px); filter: blur(10px); }
+        }
+
+        /* --- THE GOLDEN TICKET --- */
+        .ticket-stage {
+            position: relative;
+            width: 320px;
+            height: 190px;
+            z-index: 20;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 2s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+        }
+
+        .ticket-stage.revealed {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .ticket-stage.zoomed {
+            transform: scale(1.1) rotateX(5deg) translateY(-20px) !important;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        .card-inner.flipped { transform: rotateY(180deg); }
+
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, 
+                var(--gold-dark) 0%, 
+                var(--gold-light) 45%, 
+                var(--gold-primary) 50%, 
+                var(--gold-light) 55%, 
+                var(--gold-dark) 100%);
+            padding: 3px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.6),
+                0 0 30px rgba(212, 175, 55, 0.1);
+        }
+
+        .face-content {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #9b7a2e 0%, #d4af37 50%, #9b7a2e 100%);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- TICKET ART --- */
+        .shimmer {
+            position: absolute;
+            top: 0; left: -150%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg);
+            animation: moveShimmer 6s infinite;
+        }
+
+        @keyframes moveShimmer {
+            0% { left: -150%; }
+            20% { left: 150%; }
+            100% { left: 150%; }
+        }
+
+        .embossed-title {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            color: #422006;
+            letter-spacing: 4px;
+            font-weight: 700;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+            margin-bottom: 10px;
+        }
+
+        .script-text {
+            font-family: var(--font-script);
+            font-size: 1.4rem;
+            color: #5d3a1a;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        /* --- BACK FACE --- */
+        .face.back { transform: rotateY(180deg); }
+        .back-content { padding: 25px; align-items: flex-start; text-align: left; }
+        
+        .benefit-header {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            color: #422006;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(66, 32, 6, 0.2);
+            width: 100%;
+            padding-bottom: 4px;
+        }
+
+        .benefit-list {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: #5d3a1a;
+            list-style: none;
+        }
+
+        .benefit-list li { margin-bottom: 6px; display: flex; align-items: center; }
+        .benefit-list li::before { content: '✦'; margin-right: 10px; font-size: 0.6rem; }
+
+        .footer-note {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            font-family: var(--font-script);
+            font-size: 1rem;
+            color: #422006;
+            opacity: 0.8;
+        }
+
+        /* --- INTERACTIVE HINTS --- */
+        .instruction {
+            position: absolute;
+            bottom: 15%;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--gold-light);
+            opacity: 0;
+            transition: opacity 1s;
+            z-index: 30;
+            animation: pulseHint 2s infinite;
+        }
+
+        @keyframes pulseHint { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
+
+        .final-reveal {
+            position: absolute;
+            top: 25%;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            color: var(--gold-light);
+            text-align: center;
+            opacity: 0;
+            transition: 1.5s ease;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .next-btn {
+            position: absolute;
+            bottom: 10%;
+            background: transparent;
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-light);
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+
+        .next-btn:hover {
+            background: var(--gold-primary);
+            color: black;
+            box-shadow: 0 0 30px var(--gold-primary);
+        }
+
+        /* --- UTILS --- */
+        .visible { opacity: 1 !important; transform: translateY(0) !important; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="starfield"></canvas>
+    <div class="ambient-glow"></div>
+
+    <div class="intro-container">
+        <p class="intro-text" id="intro1">Some people search their whole life...</p>
+        <p class="intro-text" id="intro2" style="margin-top: 15px;">for something real.</p>
+    </div>
+
+    <div class="ticket-stage" id="ticketStage">
+        <div class="card-inner" id="cardInner">
+            <div class="face front">
+                <div class="face-content">
+                    <div class="shimmer"></div>
+                    <h1 class="embossed-title">Golden Ticket</h1>
+                    <p class="script-text">A lifetime of love,<br>with me.</p>
+                </div>
+            </div>
+            <div class="face back">
+                <div class="face-content back-content">
+                    <div class="benefit-header">EXCLUSIVE PRIVILEGES</div>
+                    <ul class="benefit-list">
+                        <li>Unlimited hugs whenever needed</li>
+                        <li>Endless kisses to start your day</li>
+                        <li>Late-night talks under the stars</li>
+                        <li>Growing old together, hand in hand</li>
+                    </ul>
+                    <div class="footer-note">Non-transferable. Belongs only to you.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="instruction" id="instruction">Tap to accept your ticket</p>
+
+    <div class="final-reveal" id="finalReveal">
+        “You are my once-in-a-lifetime.”
+    </div>
+
+    <button class="next-btn" id="nextBtn" onclick="nextPage()">Continue our story &rarr;</button>
+
+    <script>
+        /* --- BACKGROUND PARTICLES --- */
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles = [];
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<80; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 1.5 + 0.5,
+                    v: Math.random() * 0.2 + 0.1,
+                    o: Math.random()
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0,0,width,height);
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(249, 226, 156, ${p.o})`;
+                ctx.fill();
+                p.y -= p.v;
+                if(p.y < 0) p.y = height;
+            });
+            requestAnimationFrame(draw);
+        }
+
+        /* --- INTERACTIVE TILT --- */
+        const stage = document.getElementById('ticketStage');
+        document.addEventListener('mousemove', (e) => {
+            if(!stage.classList.contains('revealed')) return;
+            const x = (window.innerWidth / 2 - e.pageX) / 20;
+            const y = (window.innerHeight / 2 - e.pageY) / 20;
+            stage.style.transform = `rotateY(${-x}deg) rotateX(${y}deg)`;
+        });
+
+        /* --- PAGE LOGIC --- */
+        const intro1 = document.getElementById('intro1');
+        const intro2 = document.getElementById('intro2');
+        const ticket = document.getElementById('ticketStage');
+        const cardInner = document.getElementById('cardInner');
+        const instruction = document.getElementById('instruction');
+        const finalReveal = document.getElementById('finalReveal');
+        const nextBtn = document.getElementById('nextBtn');
+
+        window.onload = () => {
+            init(); draw();
+
+            // Intro Sequence
+            setTimeout(() => intro1.classList.add('animate-intro'), 500);
+            setTimeout(() => intro2.classList.add('animate-intro'), 1500);
+
+            // Reveal Ticket
+            setTimeout(() => {
+                ticket.classList.add('revealed');
+                setTimeout(() => instruction.style.opacity = 1, 1000);
+            }, 6500);
+        };
+
+        let isAccepted = false;
+        ticket.addEventListener('click', () => {
+            if(isAccepted) return;
+            isAccepted = true;
+
+            // Feedback
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+            ticket.classList.add('zoomed');
+            instruction.style.opacity = 0;
+
+            // Sparkle Burst
+            createSparkles();
+
+            // Flip and Reveal
+            setTimeout(() => {
+                cardInner.classList.add('flipped');
+                setTimeout(() => {
+                    finalReveal.classList.add('visible');
+                    nextBtn.classList.add('visible');
+                }, 1500);
+            }, 800);
+        });
+
+        function createSparkles() {
+            for(let i=0; i<30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                particles.push({
+                    x: width/2,
+                    y: height/2,
+                    r: Math.random() * 3 + 1,
+                    v: Math.sin(angle) * speed,
+                    vx: Math.cos(angle) * speed,
+                    o: 1,
+                    life: 100
+                });
+            }
+        }
+
+        // Override draw for sparkles
+        function drawWithSparkles() {
+            ctx.clearRect(0,0,width,height);
+            particles.forEach((p, i) => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(249, 226, 156, ${p.o})`;
+                ctx.fill();
+                
+                if(p.vx) {
+                    p.x += p.vx;
+                    p.y += p.v;
+                    p.o -= 0.02;
+                    if(p.o <= 0) particles.splice(i, 1);
+                } else {
+                    p.y -= p.v;
+                    if(p.y < 0) p.y = height;
+                }
+            });
+            requestAnimationFrame(drawWithSparkles);
+        }
+        
+        // Switch to sparkle draw when clicked
+        ticket.addEventListener('click', () => {
+             requestAnimationFrame(drawWithSparkles);
+        });
+
+        function nextPage() {
+            document.body.style.transition = 'opacity 1.5s';
+            document.body.style.opacity = 0;
+
+            setTimeout(() => {
+                window.location.href = "kintsugi_heart.html";
+            }, 1500);
+        }
+
+        window.addEventListener('resize', init);
+    </script>
+
+</body>
+</html>

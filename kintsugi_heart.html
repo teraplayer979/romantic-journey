@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Our Kintsugi Heart</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,400;1,500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #080705;
+            --porcelain: #f4f1ea;
+            --liquid-gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.6);
+            --text-white: #fafafa;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-dark);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--text-white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- AMBIENT ATMOSPHERE --- */
+        #dust-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .ambient-light {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(138, 109, 59, 0.1) 0%, transparent 70%);
+            z-index: 0;
+            transition: background 3s ease;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .story-text {
+            position: absolute;
+            top: 15%;
+            text-align: center;
+            width: 100%;
+            padding: 0 40px;
+            z-index: 10;
+        }
+
+        .line {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-style: italic;
+            opacity: 0;
+            margin-bottom: 10px;
+            transition: opacity 1.5s ease, transform 1.5s ease;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 12%;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0;
+            animation: pulseHint 3s infinite;
+            z-index: 10;
+        }
+
+        @keyframes pulseHint { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
+
+        /* --- THE KINTSUGI HEART --- */
+        .heart-stage {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            z-index: 5;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0.9);
+            transition: transform 1s ease;
+        }
+
+        .heart-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+            overflow: visible;
+        }
+
+        .heart-base {
+            fill: var(--porcelain);
+            stroke: #222;
+            stroke-width: 0.5;
+            transition: fill 2s ease;
+        }
+
+        /* The Cracks */
+        .crack {
+            fill: none;
+            stroke: #1a1a1a;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            cursor: pointer;
+            transition: stroke 0.5s ease;
+        }
+
+        /* The Gold Filling (initially hidden) */
+        .gold-vein {
+            fill: none;
+            stroke: var(--liquid-gold);
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            filter: drop-shadow(0 0 3px var(--gold-glow));
+            pointer-events: none;
+        }
+
+        /* Floating Captions */
+        .crack-label {
+            position: absolute;
+            font-family: var(--font-script);
+            font-size: 1.4rem;
+            color: var(--liquid-gold);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 1s ease;
+            white-space: nowrap;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        /* --- FINAL REVEAL --- */
+        .next-btn {
+    background: transparent;
+    border: 1px solid var(--liquid-gold);
+    color: var(--liquid-gold);
+    padding: 14px 40px;
+    border-radius: 50px;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 1s ease;
+    backdrop-filter: blur(5px);
+    margin-top: 30px;
+    pointer-events: auto;   /* add this */
+}
+        }
+
+        .repaired .heart-base {
+            animation: heartbeat 2s infinite ease-in-out;
+            fill: #fffdfa;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px var(--gold-glow)); }
+            50% { transform: scale(1.03); filter: drop-shadow(0 0 30px var(--gold-glow)); }
+        }
+
+        .next-btn {
+            background: transparent;
+            border: 1px solid var(--liquid-gold);
+            color: var(--liquid-gold);
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+            backdrop-filter: blur(5px);
+            margin-top: 30px;
+        }
+
+        .next-btn:hover {
+            background: var(--liquid-gold);
+            color: black;
+            box-shadow: 0 0 30px var(--gold-glow);
+        }
+
+        .visible { opacity: 1 !important; transform: translateY(0) !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-light" id="ambience"></div>
+    <canvas id="dust-canvas"></canvas>
+
+    <div class="story-text">
+        <p class="line" id="line1">We weren’t always perfect...</p>
+        <p class="line" id="line2" style="font-size: 1.2rem;">But we stayed.</p>
+    </div>
+
+    <div class="heart-stage" id="heartStage">
+        <svg class="heart-svg" viewBox="0 0 200 200">
+            <path class="heart-base" d="M100 180 C 100 180, 20 130, 20 70 C 20 30, 60 20, 100 60 C 140 20, 180 30, 180 70 C 180 130, 100 180, 100 180 Z" />
+            
+            <path class="crack" id="crack1" d="M 40 60 C 50 75, 70 80, 85 100" />
+            <path class="gold-vein" id="gold1" d="M 40 60 C 50 75, 70 80, 85 100" />
+
+            <path class="crack" id="crack2" d="M 160 55 C 140 80, 130 90, 120 120" />
+            <path class="gold-vein" id="gold2" d="M 160 55 C 140 80, 130 90, 120 120" />
+
+            <path class="crack" id="crack3" d="M 100 180 L 100 140 C 95 130, 80 120, 100 110" />
+            <path class="gold-vein" id="gold3" d="M 100 180 L 100 140 C 95 130, 80 120, 100 110" />
+
+            <path class="crack" id="crack4" d="M 130 160 C 110 150, 110 130, 140 120" />
+            <path class="gold-vein" id="gold4" d="M 130 160 C 110 150, 110 130, 140 120" />
+        </svg>
+
+        <span class="crack-label" id="label1" style="left: 0; top: 10%;">“Our first fight”</span>
+        <span class="crack-label" id="label2" style="right: 0; top: 15%;">“The distance”</span>
+        <span class="crack-label" id="label3" style="left: 20%; bottom: 10%;">“The hard days”</span>
+        <span class="crack-label" id="label4" style="right: 10%; bottom: 20%;">“Misunderstandings”</span>
+    </div>
+
+    <div class="hint" id="hint">Trace the cracks to heal them</div>
+
+    <div class="final-message" id="finalStage">
+        <p class="line" style="opacity:1;">We’re not perfect...</p>
+        <p class="line" style="opacity:1; font-family:var(--font-script); font-size:3rem; margin-top:20px;">We’re stronger.</p>
+        <button class="next-btn" id="nextBtn" onclick="nextChapter()">Continue our journey &rarr;</button>
+    </div>
+
+    <script>
+        /* --- INITIALIZATION --- */
+        const state = {
+            repaired: [false, false, false, false],
+            total: 4
+        };
+
+        window.onload = () => {
+            setTimeout(() => document.getElementById('line1').classList.add('visible'), 1000);
+            setTimeout(() => document.getElementById('line2').classList.add('visible'), 2500);
+            setTimeout(() => document.getElementById('hint').classList.add('visible'), 4500);
+        };
+
+        /* --- DUST PARTICLE ENGINE --- */
+        const canvas = document.getElementById('dust-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles = [];
+
+        function initParticles() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<50; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 1.5,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    o: Math.random()
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0,0,width,height);
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(212, 175, 55, ${p.o})`;
+                ctx.fill();
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>width) p.vx *= -1;
+                if(p.y<0 || p.y>height) p.vy *= -1;
+            });
+            requestAnimationFrame(drawParticles);
+        }
+        window.addEventListener('resize', initParticles);
+        initParticles(); drawParticles();
+
+        /* --- INTERACTION LOGIC --- */
+        const cracks = document.querySelectorAll('.crack');
+        
+        function handleInteraction(e) {
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            const target = document.elementFromPoint(x, y);
+
+            if (target && target.classList.contains('crack')) {
+                const id = target.id.replace('crack', '');
+                repair(id);
+            }
+        }
+
+        function repair(id) {
+            const index = parseInt(id) - 1;
+            if (state.repaired[index]) return;
+
+            state.repaired[index] = true;
+            
+            // Visual Repair
+            const goldVein = document.getElementById(`gold${id}`);
+            goldVein.style.strokeDashoffset = "0";
+            goldVein.style.transition = "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)";
+            
+            // Show Label
+            const label = document.getElementById(`label${id}`);
+            label.classList.add('visible');
+            
+            // Haptic
+            if(window.navigator.vibrate) window.navigator.vibrate(40);
+            
+            checkCompletion();
+        }
+
+        function checkCompletion() {
+            const count = state.repaired.filter(r => r).length;
+            
+            // Internal Glow Increase
+            const intensity = count / state.total;
+            document.getElementById('ambience').style.background = `radial-gradient(circle at center, rgba(212, 175, 55, ${0.1 + (intensity * 0.2)}) 0%, transparent 70%)`;
+            
+            if (count === state.total) {
+                setTimeout(finishReveal, 1500);
+            }
+        }
+
+        function finishReveal() {
+            document.getElementById('heartStage').classList.add('repaired');
+            document.getElementById('hint').style.opacity = 0;
+            document.getElementById('line1').style.opacity = 0;
+            document.getElementById('line2').style.opacity = 0;
+            
+            document.querySelectorAll('.crack-label').forEach(l => l.style.opacity = 0);
+
+            setTimeout(() => {
+                document.getElementById('finalStage').classList.add('visible');
+                document.getElementById('nextBtn').classList.add('visible');
+                document.getElementById('ambience').style.background = `radial-gradient(circle at center, rgba(212, 175, 55, 0.25) 0%, transparent 80%)`;
+                
+                // Burst of gold particles
+                for(let i=0; i<30; i++) {
+                    particles.push({
+                        x: width/2, y: height/2,
+                        r: Math.random() * 2 + 1,
+                        vx: (Math.random() - 0.5) * 5,
+                        vy: (Math.random() - 0.5) * 5,
+                        o: 1
+                    });
+                }
+            }, 1000);
+        }
+
+        document.addEventListener('mousemove', (e) => { if(e.buttons > 0) handleInteraction(e); });
+        document.addEventListener('touchmove', handleInteraction);
+        document.addEventListener('mousedown', handleInteraction);
+
+        function nextChapter() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                // This would redirect to the final proposal page
+                window.location.href = "world_without_you.html";
+            }, 1500);
+        }
+    </script>
+
+</body>
+</html>

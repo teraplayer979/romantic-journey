@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Craft Your Love Journey</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- DESIGN SYSTEM --- */
+        :root {
+            --bg-color: #fffafb; /* Soft Cream/Rose tint */
+            --card-bg: #ffffff;
+            --primary-gold: #d4af37;
+            --primary-rose: #e29578;
+            --text-dark: #2c1810;
+            --text-light: #7a6b66;
+            --input-bg: #f9f9f9;
+            --border-color: #eee0d8;
+            --success: #69db7c;
+            
+            --shadow-soft: 0 10px 40px rgba(212, 175, 55, 0.1);
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03);
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 0% 0%, rgba(212, 175, 55, 0.05), transparent 40%), 
+                              radial-gradient(circle at 100% 100%, rgba(226, 149, 120, 0.05), transparent 40%);
+            color: var(--text-dark);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            padding-bottom: 100px; /* Space for sticky button */
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin: 40px 0 60px 0;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-family: var(--font-script);
+            font-size: 1.5rem;
+            color: var(--primary-rose);
+        }
+
+        /* --- CARDS & SECTIONS --- */
+        section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        section:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .section-number {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            color: rgba(212, 175, 55, 0.2);
+            font-weight: 700;
+            margin-right: 15px;
+            line-height: 1;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* --- FORM ELEMENTS --- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--input-bg);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            background: #fff;
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        /* --- STICKY FOOTER --- */
+        .sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, var(--primary-gold), #b59223);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .save-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+        }
+
+        .status-indicator {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: var(--text-dark);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        .status-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 24, 16, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .link-box {
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin: 20px 0;
+            border: 1px dashed var(--primary-gold);
+        }
+
+        .copy-btn {
+            background: var(--text-dark);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Craft Your Love Story</h1>
+            <div class="subtitle">Fill the details to create your journey</div>
+        </header>
+
+        <section style="animation-delay: 0.1s">
+            <div class="section-header">
+                <div class="section-number">01</div>
+                <div class="section-title">The Basics</div>
+            </div>
+            <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" class="data-field" id="user_name" placeholder="e.g. Alex">
+            </div>
+            <div class="form-group">
+                <label>Partner's Name</label>
+                <input type="text" class="data-field" id="partner_name" placeholder="e.g. Jamie">
+            </div>
+            <div class="form-group">
+                <label>Relationship Start Date</label>
+                <input type="date" class="data-field" id="start_date">
+            </div>
+            <div class="form-group">
+                <label>Proposal Date (Today)</label>
+                <input type="date" class="data-field" id="proposal_date">
+            </div>
+        </section>
+
+        <section style="animation-delay: 0.2s">
+            <div class="section-header">
+                <div class="section-number">02</div>
+                <div class="section-title">First Memories</div>
+            </div>
+            <div class="form-group">
+                <label>First Message Text</label>
+                <textarea class="data-field" id="mem_msg" placeholder="What was the first thing you said?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>First Date Memory</label>
+                <textarea class="data-field" id="mem_date" placeholder="Where did you go? How did it feel?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>First Hug Memory</label>
+                <textarea class="data-field" id="mem_hug" placeholder="Describe that moment..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>First Fight (and makeup)</label>
+                <textarea class="data-field" id="mem_fight" placeholder="Briefly, how you overcame it together"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Favorite Memory</label>
+                <textarea class="data-field" id="mem_fav" placeholder="The one you cherish the most"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Late Night Memory</label>
+                <textarea class="data-field" id="mem_night" placeholder="Those 3AM conversations..."></textarea>
+            </div>
+        </section>
+
+        <section style="animation-delay: 0.3s">
+            <div class="section-header">
+                <div class="section-number">03</div>
+                <div class="section-title">Love Notes</div>
+            </div>
+            <div class="form-group">
+                <label>Love Note #1</label>
+                <input type="text" class="data-field" id="note_1" placeholder="Short & sweet">
+            </div>
+            <div class="form-group">
+                <label>Love Note #2</label>
+                <input type="text" class="data-field" id="note_2" placeholder="Funny or cute">
+            </div>
+            <div class="form-group">
+                <label>Love Note #3</label>
+                <input type="text" class="data-field" id="note_3" placeholder="Deep & emotional">
+            </div>
+            <div class="form-group">
+                <label>Invisible Message (Hidden Easter Egg)</label>
+                <input type="text" class="data-field" id="note_invisible" placeholder="Secret text they have to find">
+            </div>
+        </section>
+
+        <section style="animation-delay: 0.4s">
+            <div class="section-header">
+                <div class="section-number">04</div>
+                <div class="section-title">Swipe Memories</div>
+            </div>
+            <div class="form-group">
+                <label>Swipe Card #1 Text</label>
+                <input type="text" class="data-field" id="swipe_1" placeholder="e.g. Our trip to Paris">
+            </div>
+            <div class="form-group">
+                <label>Swipe Card #2 Text</label>
+                <input type="text" class="data-field" id="swipe_2" placeholder="e.g. Cooking disaster 2023">
+            </div>
+            <div class="form-group">
+                <label>Swipe Card #3 Text</label>
+                <input type="text" class="data-field" id="swipe_3" placeholder="e.g. Adopted our puppy">
+            </div>
+        </section>
+
+        <section style="animation-delay: 0.5s">
+            <div class="section-header">
+                <div class="section-number">05</div>
+                <div class="section-title">Relationship Stats</div>
+            </div>
+            <div class="form-group">
+                <label>Total Days Together (Approx)</label>
+                <input type="number" class="data-field" id="stat_days">
+            </div>
+            <div class="form-group">
+                <label>Total Messages Sent (Guess!)</label>
+                <input type="number" class="data-field" id="stat_msgs">
+            </div>
+            <div class="form-group">
+                <label>Total Hours Talked</label>
+                <input type="number" class="data-field" id="stat_hours">
+            </div>
+        </section>
+
+        <section style="animation-delay: 0.6s">
+            <div class="section-header">
+                <div class="section-number">06</div>
+                <div class="section-title">Compliments</div>
+            </div>
+            <div class="form-group">
+                <label>Compliment #1</label>
+                <input type="text" class="data-field" id="comp_1" placeholder="e.g. Your smile lights up the room">
+            </div>
+            <div class="form-group">
+                <label>Compliment #2</label>
+                <input type="text" class="data-field" id="comp_2" placeholder="e.g. You make the best coffee">
+            </div>
+            <div class="form-group">
+                <label>Compliment #3</label>
+                <input type="text" class="data-field" id="comp_3" placeholder="e.g. You are my safe space">
+            </div>
+        </section>
+
+        <section style="animation-delay: 0.7s">
+            <div class="section-header">
+                <div class="section-number">07</div>
+                <div class="section-title">Special Moments</div>
+            </div>
+            <div class="form-group">
+                <label>Golden Ticket Message</label>
+                <input type="text" class="data-field" id="special_ticket" placeholder="e.g. Admit Two to Forever">
+            </div>
+            <div class="form-group">
+                <label>First Kiss Description</label>
+                <textarea class="data-field" id="special_kiss" placeholder="How did it feel?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Kintsugi Heart Message (Healing)</label>
+                <textarea class="data-field" id="special_kintsugi" placeholder="About growing stronger together"></textarea>
+            </div>
+            <div class="form-group">
+                <label>World Without You (Contrast)</label>
+                <textarea class="data-field" id="special_world" placeholder="How gray life would be..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Future Together Vision</label>
+                <textarea class="data-field" id="special_future" placeholder="A house, a dog, travel?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Voice Confession Text (Backup for audio)</label>
+                <textarea class="data-field" id="special_voice" placeholder="What your voice would say..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Heartbeat Message</label>
+                <input type="text" class="data-field" id="special_heartbeat" placeholder="e.g. It beats only for you">
+            </div>
+        </section>
+
+        <section style="animation-delay: 0.8s">
+            <div class="section-header">
+                <div class="section-number">08</div>
+                <div class="section-title">The Proposal</div>
+            </div>
+            <div class="form-group">
+                <label>The Big Question</label>
+                <input type="text" class="data-field" id="prop_question" value="Will you be mine forever?" style="font-weight: bold; color: var(--primary-gold);">
+            </div>
+            <div class="form-group">
+                <label>Final Ending Message</label>
+                <textarea class="data-field" id="prop_ending" placeholder="Displayed after they say Yes..."></textarea>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="sticky-footer">
+        <button class="save-btn" onclick="generateLink()">
+            <span>✨ Save & Generate Link</span>
+        </button>
+    </div>
+
+    <div class="status-indicator" id="statusIndicator">Saved</div>
+
+    <div class="modal-overlay" id="linkModal">
+        <div class="modal-card">
+            <div class="close-modal" onclick="closeModal()">&times;</div>
+            <h2 style="font-family: var(--font-display); color: var(--text-dark); margin-bottom: 10px;">Your Journey is Ready</h2>
+            <p style="color: var(--text-light); font-size: 0.9rem;">Share this link with your special person.</p>
+            
+            <div class="link-box" id="finalLink">https://yourwebsite.com/journey?data=...</div>
+            
+            <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. ELEMENT SELECTION ---
+        const inputs = document.querySelectorAll('.data-field');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const modal = document.getElementById('linkModal');
+        const finalLinkDisplay = document.getElementById('finalLink');
+
+        // --- 2. RESTORE DATA ON LOAD ---
+        window.addEventListener('DOMContentLoaded', () => {
+            inputs.forEach(input => {
+                const savedValue = localStorage.getItem(input.id);
+                if (savedValue) {
+                    input.value = savedValue;
+                }
+                
+                // Attach auto-save listener
+                input.addEventListener('input', () => {
+                    localStorage.setItem(input.id, input.value);
+                    showSaveStatus();
+                });
+            });
+        });
+
+        // --- 3. AUTO-SAVE FEEDBACK ---
+        let saveTimeout;
+        function showSaveStatus() {
+            statusIndicator.classList.add('show');
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                statusIndicator.classList.remove('show');
+            }, 1000);
+        }
+
+        // --- 4. GENERATE LINK LOGIC ---
+  function generateLink() {
+    const data = {};
+    inputs.forEach(input => {
+        if(input.value.trim() !== "") {
+            data[input.id] = input.value.trim();
+        }
+    });
+
+    try {
+        const jsonString = JSON.stringify(data);
+        const encodedData = btoa(encodeURIComponent(jsonString));
+
+        const baseURL = window.location.origin + "/index.html";
+        const finalURL = `${baseURL}?memory=${encodedData}`;
+
+        finalLinkDisplay.innerText = finalURL;
+        modal.classList.add('active');
+
+    } catch (e) {
+        alert("Error generating link.");
+        console.error(e);
+    }
+}
+        // --- 5. MODAL ACTIONS ---
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        function copyLink() {
+            const linkText = finalLinkDisplay.innerText;
+            navigator.clipboard.writeText(linkText).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.innerText;
+                btn.innerText = "Copied! ❤️";
+                setTimeout(() => btn.innerText = originalText, 2000);
+            });
+        }
+
+        // Close modal on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://ejovamwaphbetuozuhbu.supabase.co";
+const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Create or get journey ID
+let journeyId = localStorage.getItem("journey_id");
+if (!journeyId) {
+  journeyId = crypto.randomUUID();
+  localStorage.setItem("journey_id", journeyId);
+}
+
+// Auto-save on input
+async function saveToSupabase() {
+  const data = {};
+  document.querySelectorAll(".data-field").forEach(el => {
+    if (el.value.trim() !== "") {
+      data[el.id] = el.value;
+    }
+  });
+
+  await fetch(`${SUPABASE_URL}/rest/v1/journeys`, {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json",
+      "Prefer": "resolution=merge-duplicates"
+    },
+    body: JSON.stringify({
+      id: journeyId,
+      data: JSON.stringify(data)
+    })
+  });
+}
+
+// Attach auto-save
+document.addEventListener("input", () => {
+  saveToSupabase();
+});
+
+// Modified link generator (Supabase based)
+function generateLink() {
+  const baseURL = window.location.origin + "/index.html";
+  const finalURL = baseURL + "?id=" + journeyId;
+
+  document.getElementById("finalLink").innerText = finalURL;
+  document.getElementById("linkModal").classList.add("active");
+}
+</script>
+</body>
+</html>

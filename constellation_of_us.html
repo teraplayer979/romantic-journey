@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Constellation of Us</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #020617;
+            --bg-gradient: radial-gradient(circle at 50% 100%, #312e81 0%, #0f172a 60%, #020617 100%);
+            --star-gold: #fbbf24;
+            --star-glow: rgba(251, 191, 36, 0.6);
+            --line-color: rgba(255, 255, 255, 0.2);
+            --text-main: #f8fafc;
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--bg-deep);
+            background-image: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--text-main);
+            position: relative;
+            cursor: pointer; /* Suggest interaction */
+        }
+
+        /* --- LAYERS --- */
+        #canvas-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+        }
+
+        #bg-stars {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 20;
+            pointer-events: none; /* Allow clicks to pass through to body */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- TEXT ELEMENTS --- */
+        .intro-text {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s ease, transform 1s ease;
+            position: absolute;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .intro-text.visible { opacity: 1; transform: translateY(0); }
+        .intro-text.fade-out { opacity: 0; transform: translateY(-20px); }
+
+        .star-label {
+            position: absolute;
+            font-family: var(--font-script);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+            text-shadow: 0 0 10px black;
+            pointer-events: none;
+        }
+
+        .star-label.visible { opacity: 1; transform: translateY(0); }
+
+        /* --- FINAL ELEMENTS --- */
+        .final-message {
+            position: absolute;
+            bottom: 25%;
+            width: 100%;
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--star-gold);
+            text-shadow: 0 0 20px var(--star-glow);
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 1.5s ease, transform 1.5s ease;
+            pointer-events: auto;
+        }
+
+        .final-message.visible { opacity: 1; transform: scale(1); }
+
+        .continue-btn {
+            position: absolute;
+            bottom: 10%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.5s ease;
+            pointer-events: auto; /* Enable clicking */
+            backdrop-filter: blur(5px);
+            overflow: hidden;
+        }
+
+        .continue-btn.visible { opacity: 1; }
+
+        .continue-btn:hover {
+            background: var(--star-gold);
+            color: #000;
+            border-color: var(--star-gold);
+            box-shadow: 0 0 30px var(--star-glow);
+        }
+
+        /* --- HINT --- */
+        .tap-hint {
+            position: absolute;
+            bottom: 50px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: pulse 2s infinite;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        .tap-hint.hidden { opacity: 0; }
+
+        @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 0.6; } 100% { opacity: 0.2; } }
+
+        /* --- BACKGROUND STARS --- */
+        .bg-star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle var(--dur) ease-in-out infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.2); }
+            50% { opacity: var(--op); transform: scale(1); }
+        }
+
+        /* --- SHOOTING STAR --- */
+        .shooting-star {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 4px; height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.1), 0 0 0 8px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,1);
+            animation: shoot 3s linear infinite;
+            opacity: 0;
+        }
+        .shooting-star::before {
+            content: '';
+            position: absolute;
+            top: 50%; transform: translateY(-50%);
+            width: 300px; height: 1px;
+            background: linear-gradient(90deg, #fff, transparent);
+        }
+        @keyframes shoot {
+            0% { transform: rotate(315deg) translateX(0); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: rotate(315deg) translateX(-1000px); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="bg-stars">
+        <div class="shooting-star" style="top: 10%; left: 80%; animation-delay: 2s;"></div>
+    </div>
+
+    <canvas id="canvas-layer"></canvas>
+
+    <div id="ui-layer">
+        <div class="intro-text" id="intro">Every memory became a star...</div>
+        <div class="tap-hint" id="hint">Tap the sky to connect our stars</div>
+        
+        <div class="final-message" id="finalMsg">
+            "Even the stars couldn't<br>keep us apart."
+        </div>
+
+        <button class="continue-btn" id="nextBtn" onclick="nextPage()">
+            Continue our journey &rarr;
+        </button>
+    </div>
+
+    <script>
+        /* --- CONFIGURATION --- */
+        // Percentage coordinates (0.0 to 1.0) for responsive heart shape
+        // Order matters for drawing the line
+        const STAR_DATA = [
+            { x: 0.50, y: 0.80, label: "Where we started" }, // Bottom Tip
+            { x: 0.25, y: 0.55, label: "First Hello" },      // Left Low
+            { x: 0.15, y: 0.35, label: "First Date" },       // Left High
+            { x: 0.30, y: 0.20, label: "First Kiss" },       // Left Top Bump
+            { x: 0.50, y: 0.35, label: "You & Me" },         // Center Dip
+            { x: 0.70, y: 0.20, label: "Late nights" },      // Right Top Bump
+            { x: 0.85, y: 0.35, label: "Laughter" },         // Right High
+            { x: 0.75, y: 0.55, label: "Forever" },          // Right Low
+            { x: 0.50, y: 0.80, label: "Us." }               // Back to Bottom (Close loop)
+        ];
+
+        /* --- SETUP --- */
+        const canvas = document.getElementById('canvas-layer');
+        const ctx = canvas.getContext('2d');
+        const introText = document.getElementById('intro');
+        const hintText = document.getElementById('hint');
+        const finalMsg = document.getElementById('finalMsg');
+        const nextBtn = document.getElementById('nextBtn');
+        const uiLayer = document.getElementById('ui-layer');
+
+        let width, height;
+        let revealedCount = 0; // Starts at 0, first click reveals index 0
+        let stars = [];
+        let animationFrame;
+        let isComplete = false;
+        let pulseTime = 0;
+
+        /* --- RESIZE HANDLING --- */
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Recalculate star positions based on screen size
+            stars = STAR_DATA.map(s => ({
+                x: s.x * width,
+                y: s.y * height,
+                originalX: s.x * width,
+                originalY: s.y * height,
+                label: s.label,
+                visible: false,
+                scale: 0,
+                alpha: 0
+            }));
+
+            // If complete, force all visible for resize consistency
+            if (isComplete) {
+                stars.forEach(s => { s.visible = true; s.scale = 1; s.alpha = 1; });
+            }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        /* --- BACKGROUND AMBIENT STARS --- */
+        function createBgStars() {
+            const container = document.getElementById('bg-stars');
+            for(let i=0; i<60; i++) {
+                const star = document.createElement('div');
+                star.classList.add('bg-star');
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 2 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.setProperty('--dur', (Math.random() * 3 + 2) + 's');
+                star.style.setProperty('--op', Math.random() * 0.5 + 0.2);
+                container.appendChild(star);
+            }
+        }
+        createBgStars();
+
+        /* --- INTRO ANIMATION --- */
+        setTimeout(() => {
+            introText.classList.add('visible');
+        }, 500);
+
+        /* --- INTERACTION --- */
+        document.body.addEventListener('click', handleInteraction);
+        document.body.addEventListener('touchstart', (e) => {
+            // Check if target is button to allow click through
+            if (e.target.id === 'nextBtn') return;
+            e.preventDefault(); 
+            handleInteraction();
+        }, {passive: false});
+
+        function handleInteraction(e) {
+            // Do not trigger constellation logic if clicking the final button
+            if (e && e.target.id === 'nextBtn') return;
+
+            // If intro is showing, fade it out first
+            if (introText.classList.contains('visible') && revealedCount === 0) {
+                introText.classList.remove('visible');
+                introText.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    revealNextStar();
+                }, 500);
+            } else if (!isComplete) {
+                revealNextStar();
+            }
+        }
+
+        function revealNextStar() {
+            if (revealedCount >= stars.length) return;
+
+            // Reveal star logic
+            const currentStar = stars[revealedCount];
+            currentStar.visible = true;
+
+            // Haptic Feedback
+            if (navigator.vibrate) navigator.vibrate(20);
+
+            // Create Label Element DOM
+            createLabel(currentStar.x, currentStar.y, currentStar.label);
+
+            // Hide Hint after first star
+            if (revealedCount === 0) {
+                hintText.classList.remove('hidden'); // Ensure visible
+            } else {
+                hintText.classList.add('hidden');
+            }
+
+            revealedCount++;
+
+            // Check completion
+            if (revealedCount === stars.length) {
+                finishConstellation();
+            }
+        }
+
+        function createLabel(x, y, text) {
+            // Don't create label for the closing loop point if it's the same as start
+            if (revealedCount === stars.length - 1 && revealedCount > 0) return;
+
+            const label = document.createElement('div');
+            label.classList.add('star-label');
+            label.innerText = text;
+            uiLayer.appendChild(label);
+
+            // Position (slight offset)
+            label.style.left = (x + 15) + 'px';
+            label.style.top = (y - 10) + 'px';
+
+            // Animate in
+            requestAnimationFrame(() => {
+                label.classList.add('visible');
+            });
+        }
+
+        function finishConstellation() {
+            isComplete = true;
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+            
+            // Show Final Message
+            setTimeout(() => {
+                finalMsg.classList.add('visible');
+                nextBtn.classList.add('visible');
+            }, 1000);
+        }
+
+        /* --- CANVAS RENDERING LOOP --- */
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Draw Lines
+            if (revealedCount > 1) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = 1;
+                
+                // If complete, add a glow to the line
+                if (isComplete) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(253, 164, 175, 0.5)';
+                    ctx.strokeStyle = 'rgba(253, 164, 175, 0.4)';
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+
+                // Move to first visible star
+                ctx.moveTo(stars[0].x, stars[0].y);
+
+                // Draw lines to subsequent visible stars
+                for (let i = 1; i < revealedCount; i++) {
+                    // Smooth line animation (lerp could be added here for slower drawing)
+                    ctx.lineTo(stars[i].x, stars[i].y);
+                }
+                ctx.stroke();
+                
+                // Reset shadow
+                ctx.shadowBlur = 0;
+            }
+
+            // 2. Draw Stars
+            pulseTime += 0.05;
+
+            for (let i = 0; i < stars.length; i++) {
+                const s = stars[i];
+                
+                if (s.visible) {
+                    // Animate Scale/Alpha
+                    if (s.scale < 1) s.scale += 0.1;
+                    if (s.alpha < 1) s.alpha += 0.1;
+
+                    // Heartbeat Pulse if complete
+                    let pulse = 0;
+                    if (isComplete) {
+                        pulse = Math.sin(pulseTime) * 1.5;
+                        // Move stars slightly to simulate breathing heart
+                        // Center is roughly width/2, height/2. 
+                        // Vector from center * small factor
+                        const dx = s.originalX - (width/2);
+                        const dy = s.originalY - (height/2);
+                        s.x = s.originalX + (dx * 0.005 * Math.sin(pulseTime));
+                        s.y = s.originalY + (dy * 0.005 * Math.sin(pulseTime));
+                    }
+
+                    // Draw Glow
+                    const gradient = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 15 + pulse);
+                    gradient.addColorStop(0, 'rgba(251, 191, 36, 0.8)');
+                    gradient.addColorStop(1, 'rgba(251, 191, 36, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, 15 + pulse, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Draw Core
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, 3 * s.scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            animationFrame = requestAnimationFrame(draw);
+        }
+        draw(); // Start loop
+
+        /* --- FINAL ACTION --- */
+        function nextPage() {
+            // Haptic Feedback
+            if (navigator.vibrate) navigator.vibrate(30);
+
+            // Fade out effect
+            document.body.style.transition = "opacity 1s ease";
+            document.body.style.opacity = 0;
+
+            setTimeout(() => {
+                window.location.href = "red_string_of_fate.html";
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Day One</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* =========================================
+           1. CORE STYLES
+           ========================================= */
+        :root {
+            --night-blue: #0f172a;
+            --dawn-purple: #4c1d95;
+            --sunrise-pink: #be185d;
+            --sunrise-orange: #fb923c;
+            --day-gold: #fcd34d;
+            --text-dark: #4a4a4a;
+            --paper-white: #fdfbf7;
+            
+            --f-title: 'Playfair Display', serif;
+            --f-script: 'Dancing Script', cursive;
+            --f-cinematic: 'Cinzel', serif;
+            --f-body: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--f-body);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* Initial Night State */
+            background: linear-gradient(to bottom, #020205 0%, #1a1a2e 100%); 
+            transition: background 5s ease;
+        }
+
+        /* =========================================
+           2. THE SUNRISE ENGINE
+           ========================================= */
+        #sky-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background: linear-gradient(180deg, #0f172a 0%, #312e81 40%, #be185d 80%, #fb923c 100%);
+            opacity: 0;
+            transition: opacity 8s ease-in-out;
+        }
+
+        .sun {
+            position: absolute;
+            bottom: -150px; /* Start below horizon */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, #fff 10%, #fcd34d 40%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(20px);
+            opacity: 0;
+            transition: all 8s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 1;
+        }
+
+        .ocean {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 30%;
+            background: linear-gradient(to top, #0f172a, #1e1b4b);
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 5s ease;
+        }
+
+        .reflection {
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 100px; height: 30%;
+            background: linear-gradient(to bottom, rgba(253, 211, 77, 0.4), transparent);
+            filter: blur(20px);
+            opacity: 0;
+            transition: opacity 8s ease 2s;
+            z-index: 3;
+        }
+
+        /* =========================================
+           3. UI LAYER
+           ========================================= */
+        #ui-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        /* INTRO TEXT */
+        .dawn-text {
+            font-family: var(--f-cinematic);
+            font-size: 1.5rem;
+            letter-spacing: 4px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 2s ease;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* THE POLAROID */
+        .polaroid-container {
+            margin-top: 40px;
+            background: var(--paper-white);
+            padding: 15px 15px 50px 15px;
+            color: var(--text-dark);
+            transform: rotate(-3deg) scale(0.9);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .polaroid-img {
+            width: 100%;
+            height: 250px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Simulated Photo inside Polaroid */
+        .photo-sim {
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #fbbf24, #f43f5e);
+            opacity: 0.8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .polaroid-text {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: 'Courier New', monospace; /* Typewriter look */
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: #555;
+        }
+
+        .stamp {
+            position: absolute;
+            top: 10px; right: 10px;
+            width: 60px; height: 60px;
+            border: 2px solid #be185d;
+            border-radius: 50%;
+            color: #be185d;
+            font-family: var(--f-cinematic);
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transform: rotate(15deg);
+            opacity: 0.7;
+            background: rgba(190, 24, 93, 0.05);
+        }
+
+        /* FINAL MESSAGE */
+        .final-instruction {
+            margin-top: 50px;
+            font-family: var(--f-title);
+            font-size: 1.8rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        .final-btn {
+            margin-top: 30px;
+            background: white;
+            color: #be185d;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: var(--f-cinematic);
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        /* BLACKOUT LAYER */
+        #blackout {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .goodbye-text {
+            font-family: var(--f-script);
+            font-size: 2rem;
+            color: #fff;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="sky-layer"></div>
+    <div class="sun" id="sun"></div>
+    <div class="ocean" id="ocean"></div>
+    <div class="reflection"></div>
+
+    <div id="ui-container">
+        
+        <div class="dawn-text" id="t1">The darkness is gone.</div>
+        <div class="dawn-text" id="t2" style="font-size:1rem; margin-top:10px; font-family:var(--f-body);">A new day has begun.</div>
+
+        <div class="polaroid-container" id="polaroid">
+            <div class="polaroid-img">
+                <div class="photo-sim">
+                    <div style="font-size: 4rem;">💍</div>
+                    <div style="font-family: var(--f-script); font-size: 2rem; color: white; text-shadow: 0 2px 5px rgba(0,0,0,0.2);">She Said Yes</div>
+                </div>
+            </div>
+            <div class="stamp">OFFICIAL<br>RECORD</div>
+            <div class="polaroid-text" id="timestamp">EST. 00:00:00</div>
+        </div>
+
+        <div class="final-instruction" id="finalText">
+            Our story doesn't end here.<br>
+            It starts now.
+        </div>
+
+        <button class="final-btn" id="finishBtn" onclick="finishJourney()">Close the Book</button>
+
+    </div>
+
+    <div id="blackout">
+        <div class="goodbye-text">Now... come give me a hug. ❤️</div>
+    </div>
+
+    <script>
+        /* --- TIMING ENGINE --- */
+        window.onload = () => {
+            // 1. Trigger Sunrise
+            setTimeout(() => {
+                document.getElementById('sky-layer').style.opacity = 1;
+                document.getElementById('ocean').style.opacity = 1;
+                document.getElementById('sun').style.bottom = "15%"; // Sun rises
+                document.getElementById('sun').style.opacity = 1;
+                document.querySelector('.reflection').style.opacity = 1;
+            }, 500);
+
+            // 2. Show Text
+            setTimeout(() => {
+                document.getElementById('t1').style.opacity = 1;
+                document.getElementById('t1').style.transform = "translateY(0)";
+            }, 2500);
+
+            setTimeout(() => {
+                document.getElementById('t2').style.opacity = 0.8;
+                document.getElementById('t2').style.transform = "translateY(0)";
+            }, 4000);
+
+            // 3. Drop Polaroid
+            setTimeout(() => {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString() + " • " + now.toLocaleTimeString();
+                document.getElementById('timestamp').innerText = dateStr;
+                
+                const p = document.getElementById('polaroid');
+                p.style.opacity = 1;
+                p.style.transform = "rotate(-3deg) scale(1)";
+                
+                if(navigator.vibrate) navigator.vibrate(50); // Thud sound effect feeling
+            }, 6000);
+
+            // 4. Final CTA
+            setTimeout(() => {
+                document.getElementById('finalText').style.opacity = 1;
+                document.getElementById('finalText').style.transform = "translateY(0)";
+                
+                document.getElementById('finishBtn').style.opacity = 1;
+                document.getElementById('finishBtn').style.transform = "translateY(0)";
+            }, 9000);
+        };
+
+        function finishJourney() {
+            // Haptic Pulse
+            if(navigator.vibrate) navigator.vibrate([50, 100]);
+
+            // Fade to Black
+            const b = document.getElementById('blackout');
+            b.style.opacity = 1;
+            
+            // Note: We don't redirect anywhere. We end here. 
+            // The silence after the blackout is the signal to connect in real life.
+        }
+
+    </script>
+</body>
+</html>

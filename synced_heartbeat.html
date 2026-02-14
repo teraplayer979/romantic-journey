@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Our Synced Hearts</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #1a050b;
+            --heart-red: #7f1d1d;
+            --heart-glow: #ef4444;
+            --text-color: #fce7f3;
+            --gold-warm: #fbbf24;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at center, #2e0812 0%, #000000 100%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        /* --- ATMOSPHERE --- */
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 40%, black 120%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- UI CONTAINER --- */
+        .stage {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease;
+        }
+
+        /* --- THE HEART --- */
+        .heart-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        /* The visual orb representing the heart */
+        .heart-orb {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at 30% 30%, #ff7b7b, #991b1b);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 30px rgba(153, 27, 27, 0.4),
+                inset 0 0 20px rgba(0,0,0,0.5);
+            transform: scale(1);
+            transition: box-shadow 0.3s ease, background 2s ease;
+            position: relative;
+        }
+
+        /* Pulse Rings */
+        .pulse-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 100%;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Animation class applied by JS for organic rhythm */
+        .heart-beat {
+            animation: organicBeat 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+
+        .ring-beat {
+            animation: ringRipple 1.2s infinite ease-out;
+        }
+
+        @keyframes organicBeat {
+            0% { transform: scale(1); }
+            10% { transform: scale(1.08); } /* Lub */
+            20% { transform: scale(1); }
+            30% { transform: scale(1.15); box-shadow: 0 0 50px rgba(220, 38, 38, 0.6); } /* Dub */
+            50% { transform: scale(1); box-shadow: 0 0 30px rgba(153, 27, 27, 0.4); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes ringRipple {
+            0% { width: 120px; height: 120px; opacity: 0.6; border-width: 2px; }
+            50% { opacity: 0; }
+            100% { width: 300px; height: 300px; opacity: 0; border-width: 0px; }
+        }
+
+        /* --- TEXT --- */
+        .text-area {
+            height: 80px;
+            text-align: center;
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .main-text {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            opacity: 0;
+            animation: fadeUp 2s ease forwards 1s;
+        }
+
+        .sub-text {
+            font-family: var(--font-script);
+            font-size: 1.8rem;
+            color: var(--gold-warm);
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        /* --- TOUCH ZONE --- */
+        .touch-zone {
+            width: 90px;
+            height: 90px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards 4s;
+        }
+
+        .fingerprint {
+            font-size: 2rem;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .touch-label {
+            position: absolute;
+            bottom: -30px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.5);
+            width: 200px;
+            text-align: center;
+        }
+
+        /* Active State */
+        .active-hold .touch-zone {
+            border-color: var(--gold-warm);
+            background: rgba(251, 191, 36, 0.1);
+            transform: scale(0.95);
+        }
+        
+        .active-hold .fingerprint { opacity: 1; color: var(--gold-warm); }
+
+        /* --- FINAL BLACKOUT LAYER --- */
+        .blackout-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            transition: opacity 2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .final-question-text {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            color: white;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1.5s ease;
+            text-align: center;
+        }
+
+        .next-btn {
+            margin-top: 40px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease 1s;
+        }
+
+        .next-btn:hover {
+            border-color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <canvas id="particle-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="stage" id="mainStage">
+        
+        <div class="heart-container">
+            <div class="pulse-ring" id="ring1"></div>
+            <div class="pulse-ring" id="ring2" style="animation-delay: 0.2s"></div>
+            <div class="heart-orb" id="heartOrb"></div>
+        </div>
+
+        <div class="text-area">
+            <div class="main-text" id="mainText">Before I ask you something...<br>let’s just be here. Together.</div>
+            <div class="sub-text" id="subText"></div>
+        </div>
+
+        <div class="touch-zone" id="touchBtn">
+            <div class="fingerprint">☝️</div>
+            <div class="touch-label">Place your thumb here</div>
+        </div>
+
+    </div>
+
+    <div class="blackout-layer" id="blackout">
+        <div class="final-question-text" id="finalText">And now...<br>the most important question.</div>
+        <button class="next-btn" id="nextBtn" onclick="nextPage()">Continue &rarr;</button>
+    </div>
+
+    <script>
+        /* --- ELEMENTS --- */
+        const heartOrb = document.getElementById('heartOrb');
+        const touchBtn = document.getElementById('touchBtn');
+        const mainText = document.getElementById('mainText');
+        const subText = document.getElementById('subText');
+        const rings = document.querySelectorAll('.pulse-ring');
+        const body = document.body;
+        
+        let isHolding = false;
+        let holdTimer = null;
+        let progress = 0;
+        let beatInterval;
+
+        /* --- HEARTBEAT ENGINE --- */
+        // Simulates a resting heart rate (~60 BPM)
+        function startHeartbeat() {
+            heartOrb.classList.add('heart-beat');
+            rings.forEach(r => r.classList.add('ring-beat'));
+        }
+
+        function stopHeartbeat() {
+            heartOrb.classList.remove('heart-beat');
+            rings.forEach(r => r.classList.remove('ring-beat'));
+        }
+
+        // Start initial idle beat
+        setTimeout(startHeartbeat, 500);
+
+        /* --- TOUCH INTERACTION --- */
+        function onTouchStart(e) {
+            e.preventDefault();
+            if (progress >= 100) return; // Already done
+
+            isHolding = true;
+            body.classList.add('active-hold');
+            
+            // Trigger haptic immediate feedback
+            if (navigator.vibrate) navigator.vibrate(20);
+
+            // Speed up heartbeat slightly to simulate excitement
+            heartOrb.style.animationDuration = "0.8s";
+            rings.forEach(r => r.style.animationDuration = "0.8s");
+
+            // Start Progress Loop
+            holdTimer = setInterval(updateProgress, 100);
+        }
+
+        function onTouchEnd() {
+            if (progress >= 100) return;
+
+            isHolding = false;
+            body.classList.remove('active-hold');
+            clearInterval(holdTimer);
+
+            // Slow down heartbeat
+            heartOrb.style.animationDuration = "1.2s";
+            rings.forEach(r => r.style.animationDuration = "1.2s");
+
+            // Reset text if released early
+            subText.style.opacity = 0;
+            setTimeout(() => {
+                if(!isHolding) {
+                    subText.innerText = "Stay with me a little longer...";
+                    subText.style.opacity = 1;
+                }
+            }, 500);
+        }
+
+        function updateProgress() {
+            progress += 2; // Increases over ~5 seconds
+
+            // Haptic Sync (Simulated based on progress)
+            if (progress % 20 === 0 && navigator.vibrate) {
+                navigator.vibrate([30]); // Soft thump
+            }
+
+            // Text Progression
+            if (progress === 20) updateSubText("Just you.");
+            if (progress === 40) updateSubText("Just me.");
+            if (progress === 60) updateSubText("Just us.");
+            
+            // Visual Intensity
+            const glowIntensity = progress / 100;
+            heartOrb.style.boxShadow = `0 0 ${30 + (glowIntensity * 50)}px rgba(220, 38, 38, ${0.4 + glowIntensity * 0.4})`;
+            
+            // Color Shift to Gold
+            if (progress > 80) {
+                heartOrb.style.background = `radial-gradient(circle at 30% 30%, #fcd34d, #b45309)`;
+                touchBtn.style.borderColor = "#fcd34d";
+            }
+
+            if (progress >= 100) {
+                completeExperience();
+            }
+        }
+
+        function updateSubText(text) {
+            subText.style.opacity = 0;
+            setTimeout(() => {
+                subText.innerText = text;
+                subText.style.opacity = 1;
+            }, 300);
+        }
+
+        function completeExperience() {
+            clearInterval(holdTimer);
+            isHolding = false; // Prevent logic re-entry
+            
+            // Climax
+            if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+            updateSubText("My heart feels at home with you.");
+            touchBtn.style.opacity = 0;
+            touchBtn.style.pointerEvents = "none";
+
+            // Spawn Particles
+            for(let i=0; i<30; i++) {
+                spawnGoldenParticle();
+            }
+
+            // Transition to Blackout after 3 seconds
+            setTimeout(triggerBlackout, 3500);
+        }
+
+        function triggerBlackout() {
+            // Stop sound/animation illusion
+            stopHeartbeat();
+            
+            const blackout = document.getElementById('blackout');
+            blackout.style.opacity = 1;
+            blackout.style.pointerEvents = 'auto';
+
+            // Wait in silence (2s) then show text
+            setTimeout(() => {
+                const finalText = document.getElementById('finalText');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                finalText.style.opacity = 1;
+                finalText.style.transform = "translateY(0)";
+                
+                nextBtn.style.opacity = 1;
+                nextBtn.style.transform = "translateY(0)";
+                
+            }, 2500);
+        }
+
+        /* --- PARTICLE SYSTEM --- */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initParticles() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            for(let i=0; i<40; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    speedY: Math.random() * 0.5 + 0.1,
+                    opacity: Math.random() * 0.5
+                });
+            }
+        }
+
+        function spawnGoldenParticle() {
+            particles.push({
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2,
+                size: Math.random() * 4 + 2,
+                speedX: (Math.random() - 0.5) * 4,
+                speedY: (Math.random() - 0.5) * 4,
+                opacity: 1,
+                color: '#fbbf24'
+            });
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach((p, index) => {
+                // Update
+                if (p.color) { // Golden Burst particles
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.opacity -= 0.01;
+                    if(p.opacity <= 0) particles.splice(index, 1);
+                    ctx.fillStyle = `rgba(251, 191, 36, ${p.opacity})`;
+                } else { // Ambient particles
+                    p.y -= p.speedY;
+                    if (p.y < 0) p.y = canvas.height;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                }
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        /* --- LISTENERS --- */
+        touchBtn.addEventListener('mousedown', onTouchStart);
+        touchBtn.addEventListener('touchstart', onTouchStart, {passive: false});
+        window.addEventListener('mouseup', onTouchEnd);
+        window.addEventListener('touchend', onTouchEnd);
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        animateParticles();
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            // Redirect to the proposal page
+            window.location.href = "proposal_page.html";
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Beyond Time & Infinity</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #030005;
+            --tree-brown: #2d1b0e;
+            --leaf-color: #fda4af;
+            --infinity-gold: #fbbf24;
+            --font-display: 'Playfair Display', serif;
+            --font-hand: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 100%, #1a0b2e 0%, #030005 80%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- UNIVERSE ATMOSPHERE --- */
+        #star-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- THE EVOLVING STAGE --- */
+        .stage {
+            position: relative;
+            width: 100%;
+            height: 40vh;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .visual-target {
+            position: relative;
+            width: 320px;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            transition: all 1s ease;
+        }
+
+        .tree-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 10px rgba(253, 164, 175, 0.2));
+            transition: opacity 1s, transform 1s;
+        }
+
+        .trunk { fill: var(--tree-brown); transition: all 1s; }
+        .leaves { fill: var(--leaf-color); transition: all 1.2s; opacity: 0.6; }
+
+        /* Infinity Symbol (Hidden until the end) */
+        .infinity-symbol {
+            position: absolute;
+            top: 30%;
+            font-size: 8rem;
+            color: var(--infinity-gold);
+            opacity: 0;
+            filter: blur(10px);
+            transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-shadow: 0 0 30px var(--infinity-gold);
+        }
+
+        /* --- STORY BOX --- */
+        .story-content {
+            text-align: center;
+            z-index: 20;
+            padding: 20px;
+            height: 160px;
+        }
+
+        .year-label {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            letter-spacing: 10px;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 10px;
+        }
+
+        .main-msg {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-style: italic;
+            height: 4rem;
+            transition: opacity 0.5s;
+        }
+
+        .hand-msg {
+            font-family: var(--font-hand);
+            font-size: 2rem;
+            color: var(--infinity-gold);
+            opacity: 0;
+            transition: all 1s;
+        }
+
+        /* --- SLIDER UI --- */
+        .slider-ui {
+            width: 80%;
+            max-width: 400px;
+            margin-top: 20px;
+            z-index: 30;
+            text-align: center;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            outline: none;
+            margin-bottom: 25px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--infinity-gold);
+            border: 2px solid var(--infinity-gold);
+        }
+
+        .next-btn {
+            padding: 14px 40px;
+            background: transparent;
+            border: 1px solid var(--infinity-gold);
+            color: var(--infinity-gold);
+            border-radius: 50px;
+            font-family: var(--font-display);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+            pointer-events: none;
+        }
+
+        .next-btn.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="star-canvas"></canvas>
+
+    <div class="stage">
+        <div class="visual-target">
+            <div class="infinity-symbol" id="infinity">∞</div>
+            <svg class="tree-svg" id="tree" viewBox="0 0 200 200">
+                <path class="trunk" id="trunk" d="M95 190 Q100 180 105 190 L102 200 L98 200 Z" />
+                <g id="leaves" class="leaves"></g>
+            </svg>
+        </div>
+    </div>
+
+    <div class="story-content">
+        <div class="year-label" id="year-text">2026</div>
+        <div class="main-msg" id="msg-main">A tiny seed of love...</div>
+        <div class="hand-msg" id="msg-hand">Ready to grow forever.</div>
+    </div>
+
+    <div class="slider-ui">
+        <input type="range" id="time-travel" min="0" max="110" value="0">
+        <button class="next-btn" id="next-btn" onclick="nextPage()">Listen to our heart &rarr;</button>
+    </div>
+
+    <script>
+        const slider = document.getElementById('time-travel');
+        const trunk = document.getElementById('trunk');
+        const leaves = document.getElementById('leaves');
+        const infinity = document.getElementById('infinity');
+        const tree = document.getElementById('tree');
+        const yearText = document.getElementById('year-text');
+        const msgMain = document.getElementById('msg-main');
+        const msgHand = document.getElementById('msg-hand');
+        const nextBtn = document.getElementById('next-btn');
+
+        const milestones = [
+            { p: 0, year: 2026, main: "A tiny seed of love...", hand: "Ready to grow forever.", trunk: "M95 190 Q100 180 105 190 L102 200 L98 200 Z", leafCount: 4 },
+            { p: 35, year: 2045, main: "Shelter through the storms...", hand: "Our roots are deep and strong.", trunk: "M90 190 Q100 140 110 190 L105 200 L95 200 Z", leafCount: 20 },
+            { p: 70, year: 2075, main: "Beautiful golden years...", hand: "Still hand in hand, heart to heart.", trunk: "M80 190 Q100 90 120 190 L112 200 L88 200 Z", leafCount: 50 },
+            { p: 100, year: "∞", main: "Beyond the stars...", hand: "Our love is the light of the universe.", trunk: "M100 200 L100 200", leafCount: 100 }
+        ];
+
+        function updateExperience(val) {
+            let m = milestones[0];
+            milestones.forEach(item => { if(val >= item.p) m = item; });
+
+            // Tree Logic
+            if (val < 100) {
+                tree.style.opacity = 1;
+                tree.style.transform = "scale(1)";
+                infinity.style.opacity = 0;
+                infinity.style.filter = "blur(10px)";
+                trunk.setAttribute('d', m.trunk);
+                
+                leaves.innerHTML = '';
+                for(let i=0; i<m.leafCount; i++) {
+                    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    const angle = (i * 137.5) * (Math.PI / 180);
+                    const radius = Math.sqrt(i) * (val * 0.6 + 5);
+                    c.setAttribute('cx', 100 + Math.cos(angle) * radius);
+                    c.setAttribute('cy', 160 - (val * 0.9) + Math.sin(angle) * radius);
+                    c.setAttribute('r', Math.random() * 4 + 2);
+                    leaves.appendChild(c);
+                }
+            } else {
+                // Infinity Logic
+                tree.style.opacity = 0;
+                tree.style.transform = "scale(0.5)";
+                infinity.style.opacity = 1;
+                infinity.style.filter = "blur(0px)";
+                infinity.style.transform = "translateY(-20px)";
+            }
+
+            // Text Logic
+            if(yearText.innerText != m.year) {
+                yearText.innerText = m.year;
+                msgMain.style.opacity = 0;
+                msgHand.style.opacity = 0;
+                setTimeout(() => {
+                    msgMain.innerText = m.main;
+                    msgHand.innerText = m.hand;
+                    msgMain.style.opacity = 1;
+                    msgHand.style.opacity = 1;
+                }, 300);
+            }
+
+            if(val >= 105) nextBtn.classList.add('active');
+            else nextBtn.classList.remove('active');
+        }
+
+        slider.addEventListener('input', (e) => {
+            updateExperience(e.target.value);
+            if(e.target.value % 8 == 0 && window.navigator.vibrate) window.navigator.vibrate(5);
+        });
+
+        // --- STARFIELD ENGINE ---
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function initStars() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<150; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    v: Math.random() * 0.05
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
+            stars.forEach(s => {
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                ctx.fill();
+                s.y -= s.v;
+                if(s.y < 0) s.y = canvas.height;
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', initStars);
+        initStars(); animate(); updateExperience(0);
+
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s";
+            document.body.style.opacity = 0;
+            setTimeout(() => { window.location.href = "audio_wave_confession.html"; }, 1500);
+        }
+    </script>
+</body>
+</html>

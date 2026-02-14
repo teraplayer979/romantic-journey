@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Voice That Found You</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #050508;
+            --wave-idle: #4b5563;
+            --wave-active: #fda4af;
+            --wave-heart: #fbbf24;
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at center, #1a1025 0%, #050508 80%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- ATMOSPHERE --- */
+        #dust-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- UI LAYERS --- */
+        .ui-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            transition: opacity 1s ease;
+        }
+
+        .title-text {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+            opacity: 1;
+            transition: opacity 1s;
+        }
+
+        /* --- THE WAVE CANVAS --- */
+        #wave-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5;
+            cursor: pointer; /* Interaction hint */
+        }
+
+        /* --- BUTTON --- */
+        .play-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .play-btn:hover {
+            border-color: var(--wave-active);
+            box-shadow: 0 0 20px rgba(253, 164, 175, 0.2);
+        }
+
+        .play-btn:hover::before { left: 100%; }
+
+        /* --- FLOATING MEMORIES --- */
+        .memory-text {
+            position: absolute;
+            font-family: var(--font-script);
+            color: var(--wave-heart);
+            font-size: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+            animation: floatFade 4s forwards;
+        }
+
+        @keyframes floatFade {
+            0% { opacity: 0; transform: translateY(20px) scale(0.8); }
+            20% { opacity: 1; transform: translateY(0) scale(1); }
+            80% { opacity: 1; transform: translateY(-20px) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(0.9); }
+        }
+
+        /* --- ENDING SCENE --- */
+        .final-scene {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+            transition: opacity 2s ease;
+        }
+
+        .final-line {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .next-btn {
+            background: transparent;
+            border: 1px solid var(--wave-active);
+            color: var(--wave-active);
+            padding: 14px 35px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.5s;
+        }
+
+        .next-btn:hover {
+            background: var(--wave-active);
+            color: #000;
+            box-shadow: 0 0 30px rgba(253, 164, 175, 0.4);
+        }
+
+        .fade-out { opacity: 0 !important; pointer-events: none; }
+        .visible { opacity: 1 !important; pointer-events: auto !important; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="dust-canvas"></canvas>
+    <canvas id="wave-canvas"></canvas>
+
+    <div class="ui-container" id="ui-layer">
+        <h1 class="title-text" id="title">My heart has something to say...</h1>
+        <button class="play-btn" id="start-btn" onclick="startExperience()">Listen closely</button>
+    </div>
+
+    <div class="final-scene" id="final-layer">
+        <div class="final-line">So... there’s one question left in my heart.</div>
+        <button class="next-btn" onclick="nextPage()">Feel my heartbeat &rarr;</button>
+    </div>
+
+    <audio id="audio-source" loop>
+        <source src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" type="audio/mpeg">
+    </audio>
+
+    <script>
+        /* --- CONFIGURATION --- */
+        const canvas = document.getElementById('wave-canvas');
+        const ctx = canvas.getContext('2d');
+        const dustCanvas = document.getElementById('dust-canvas');
+        const dCtx = dustCanvas.getContext('2d');
+        
+        let width, height;
+        let isPlaying = false;
+        let animationFrame;
+        let phase = 'IDLE'; // IDLE, VOICE, MORPH, EXPLODE, END
+        let startTime = 0;
+        
+        // Waveform Points
+        let points = [];
+        const numPoints = 150;
+        
+        // Memories to display
+        const memories = [
+            { text: "First hello", time: 3000 },
+            { text: "Your laugh", time: 5500 },
+            { text: "Late nights", time: 7500 },
+            { text: "The way you look at me", time: 9500 },
+            { text: "Forever", time: 12000 }
+        ];
+
+        /* --- INITIALIZATION --- */
+        function init() {
+            width = canvas.width = dustCanvas.width = window.innerWidth;
+            height = canvas.height = dustCanvas.height = window.innerHeight;
+            
+            // Initialize points in a flat line
+            points = [];
+            for (let i = 0; i < numPoints; i++) {
+                points.push({
+                    x: (width / numPoints) * i,
+                    y: height / 2,
+                    targetX: (width / numPoints) * i,
+                    targetY: height / 2,
+                    angle: (i / numPoints) * Math.PI * 2 // Pre-calc for heart mapping
+                });
+            }
+        }
+
+        /* --- WAVEFORM LOGIC --- */
+        function updatePoints(timestamp) {
+            const time = (timestamp - startTime);
+
+            // PHASE 1: VOICE SIMULATION (0s - 8s)
+            if (phase === 'VOICE') {
+                // Simulate voice peaks using Perlin-ish noise (Sine sums)
+                for (let i = 0; i < numPoints; i++) {
+                    const centerDist = 1 - Math.abs((i - numPoints/2) / (numPoints/2)); // Louder in middle
+                    const noise = Math.sin(i * 0.2 + time * 0.01) * Math.cos(i * 0.5 - time * 0.02);
+                    const amplitude = 50 * centerDist; // Height of wave
+                    
+                    // Jitter for voice texture
+                    const voiceJitter = (Math.random() - 0.5) * 10 * centerDist;
+                    
+                    points[i].targetY = (height / 2) + (noise * amplitude) + voiceJitter;
+                    points[i].targetX = (width / numPoints) * i;
+                }
+
+                // Transition to Morph
+                if (time > 8000) phase = 'MORPH';
+            }
+
+            // PHASE 2: MORPH TO HEART (8s - 13s)
+            else if (phase === 'MORPH') {
+                const heartScale = Math.min(width, height) * 0.35;
+                const centerX = width / 2;
+                const centerY = height / 2 - 20;
+
+                for (let i = 0; i < numPoints; i++) {
+                    // Parametric Heart Equation
+                    // x = 16sin^3(t)
+                    // y = 13cos(t) - 5cos(2t) - 2cos(3t) - cos(4t)
+                    
+                    // Map points 0..numPoints to 0..2PI
+                    const t = (i / numPoints) * Math.PI * 2;
+                    
+                    // Heart math
+                    const hx = 16 * Math.pow(Math.sin(t), 3);
+                    const hy = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+
+                    points[i].targetX = centerX + (hx * (heartScale / 16));
+                    points[i].targetY = centerY - (hy * (heartScale / 16)); // Minus Y because canvas Y is inverted
+                }
+
+                if (time > 13000) phase = 'EXPLODE';
+            }
+
+            // PHASE 3: EXPLOSION (13s+)
+            else if (phase === 'EXPLODE') {
+                for (let i = 0; i < numPoints; i++) {
+                    // Drift upwards and fade
+                    points[i].targetY -= Math.random() * 2 + 1;
+                    points[i].targetX += (Math.random() - 0.5) * 2;
+                }
+                
+                if (time > 16000) endGame();
+            }
+
+            // PHYSICS LERP (Smooths the movement)
+            // This makes the transition from Line -> Voice -> Heart feel liquid
+            const easing = phase === 'MORPH' ? 0.05 : 0.2; 
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw
+            ctx.beginPath();
+            
+            // If exploding, draw dots. If wave/heart, draw line.
+            if (phase === 'EXPLODE') {
+                points.forEach(p => {
+                    p.x += (p.targetX - p.x) * easing;
+                    p.y += (p.targetY - p.y) * easing;
+                    
+                    ctx.fillStyle = `rgba(251, 191, 36, ${Math.max(0, 1 - (time - 13000)/3000)})`; // Fade out gold
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 2, 0, Math.PI*2);
+                    ctx.fill();
+                });
+            } else {
+                // Line Drawing
+                // Start
+                ctx.moveTo(points[0].x, points[0].y);
+
+                // Control points for smooth curve
+                for (let i = 0; i < numPoints; i++) {
+                    const p = points[i];
+                    // Lerp position
+                    p.x += (p.targetX - p.x) * easing;
+                    p.y += (p.targetY - p.y) * easing;
+                    
+                    if (i > 0) ctx.lineTo(p.x, p.y);
+                }
+
+                // Styling
+                // Voice = Pink, Heart = Gold
+                let color = '#fda4af'; // Rose
+                let glow = 10;
+                
+                if (phase === 'MORPH' || phase === 'HEART') {
+                    color = '#fbbf24'; // Gold
+                    glow = 20 + Math.sin(time * 0.005) * 10; // Pulse glow
+                }
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.shadowBlur = glow;
+                ctx.shadowColor = color;
+                ctx.stroke();
+                
+                // Close loop if heart
+                if (phase === 'MORPH' || phase === 'HEART') {
+                    ctx.lineTo(points[0].x, points[0].y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Trigger Words
+            checkMemories(time);
+
+            if (phase !== 'END') {
+                animationFrame = requestAnimationFrame(() => updatePoints(Date.now()));
+            }
+        }
+
+        /* --- NARRATIVE LOGIC --- */
+        function startExperience() {
+            if (isPlaying) return;
+            isPlaying = true;
+            startTime = Date.now();
+            phase = 'VOICE';
+
+            // Hide UI
+            document.getElementById('title').classList.add('fade-out');
+            document.getElementById('start-btn').classList.add('fade-out');
+            
+            // Start Audio (Silent or real)
+            document.getElementById('audio-source').play().catch(e => console.log("Audio play blocked (expected on some browsers without touch)"));
+
+            // Start Animation Loop
+            updatePoints(startTime);
+        }
+
+        function checkMemories(time) {
+            if (memories.length > 0 && time > memories[0].time) {
+                spawnFloatingText(memories[0].text);
+                memories.shift();
+                
+                // Haptic on emotional words
+                if (navigator.vibrate) navigator.vibrate(30);
+            }
+        }
+
+        function spawnFloatingText(text) {
+            const el = document.createElement('div');
+            el.innerText = text;
+            el.className = 'memory-text';
+            
+            // Random position near center
+            const x = window.innerWidth / 2 + (Math.random() - 0.5) * 200;
+            const y = window.innerHeight / 2 + (Math.random() - 0.5) * 100;
+            
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            
+            document.body.appendChild(el);
+            
+            setTimeout(() => el.remove(), 4000);
+        }
+
+        function endGame() {
+            phase = 'END';
+            ctx.clearRect(0, 0, width, height); // Clear canvas
+            
+            document.getElementById('final-layer').classList.add('visible');
+        }
+
+        /* --- DUST PARTICLES --- */
+        let dusts = [];
+        function initDust() {
+            dusts = [];
+            for(let i=0; i<50; i++) {
+                dusts.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    v: Math.random() * 0.5,
+                    s: Math.random() * 2
+                });
+            }
+        }
+        function drawDust() {
+            dCtx.clearRect(0, 0, width, height);
+            dCtx.fillStyle = "rgba(255,255,255,0.2)";
+            dusts.forEach(d => {
+                d.y -= d.v;
+                if(d.y < 0) d.y = height;
+                dCtx.beginPath();
+                dCtx.arc(d.x, d.y, d.s, 0, Math.PI*2);
+                dCtx.fill();
+            });
+            requestAnimationFrame(drawDust);
+        }
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 2s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                window.location.href = "synced_heartbeat.html";
+            }, 2000);
+        }
+
+        // Listeners
+        window.addEventListener('resize', init);
+        init();
+        initDust();
+        drawDust();
+
+    </script>
+
+</body>
+</html>

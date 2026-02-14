@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Red String</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #020617;
+            --bg-gradient: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+            --thread-dim: #4c0519;
+            --thread-glow: #f43f5e;
+            --thread-light: #fda4af;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--text-main);
+            position: relative;
+            user-select: none;
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        #star-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- UI LAYER --- */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 20;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .intro-text {
+            margin-top: 15%;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards 0.5s;
+            padding: 0 20px;
+        }
+
+        .title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+        }
+
+        .subtitle {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* --- THE RED STRING SVG --- */
+        .svg-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none; /* Interaction handled by overlay div */
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* The dim path (always visible) */
+        .path-dim {
+            fill: none;
+            stroke: var(--thread-dim);
+            stroke-width: 2;
+            stroke-dasharray: 5 5;
+        }
+
+        /* The glowing path (revealed) */
+        .path-lit {
+            fill: none;
+            stroke: var(--thread-glow);
+            stroke-width: 4;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 10px var(--thread-glow));
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000; /* Hidden initially */
+        }
+
+        /* --- INTERACTION HANDLES --- */
+        .knot {
+            position: absolute;
+            width: 30px; height: 30px;
+            background: var(--thread-light);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--thread-glow), inset 0 0 10px var(--thread-glow);
+            z-index: 15;
+            transform: translate(-50%, -50%);
+            pointer-events: auto; /* Clickable */
+            cursor: grab;
+            transition: transform 0.1s;
+        }
+        
+        .knot::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 60px; height: 60px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 2s infinite;
+        }
+
+        .knot.dragging {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        /* The Partner's End (Bottom) */
+        .knot-end {
+            position: absolute;
+            width: 20px; height: 20px;
+            background: var(--thread-dim);
+            border-radius: 50%;
+            z-index: 15;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--thread-dim);
+            transition: all 0.5s;
+        }
+
+        /* --- OBSTACLES --- */
+        .obstacle {
+            position: absolute;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 12;
+        }
+
+        .obstacle.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .obs-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+        }
+
+        .obs-label {
+            font-family: var(--font-script);
+            font-size: 1.2rem;
+            color: var(--thread-light);
+            white-space: nowrap;
+            text-shadow: 0 0 5px black;
+        }
+
+        /* --- FINAL REVEAL --- */
+        .final-layer {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+            z-index: 30;
+        }
+
+        .final-text {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px var(--thread-glow);
+        }
+
+        .heart-merge {
+            font-size: 5rem;
+            color: var(--thread-glow);
+            filter: drop-shadow(0 0 30px var(--thread-glow));
+            transform: scale(0);
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 20px;
+        }
+
+        .next-btn {
+            background: transparent;
+            border: 1px solid var(--thread-light);
+            color: var(--text-main);
+            padding: 16px 36px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.2);
+            transition: 0.3s;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .next-btn:hover {
+            background: var(--thread-glow);
+            color: white;
+            box-shadow: 0 0 40px rgba(244, 63, 94, 0.6);
+            border-color: transparent;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="star-canvas"></canvas>
+
+    <div class="ui-layer" id="introUI">
+        <div class="intro-text">
+            <div class="title">Some souls are tied together...</div>
+            <div class="subtitle">by a thread no one can see.</div>
+        </div>
+    </div>
+
+    <div class="svg-container">
+        <svg id="threadSvg">
+            <path id="pathDim" class="path-dim" />
+            <path id="pathLit" class="path-lit" />
+        </svg>
+    </div>
+
+    <div class="obstacle" id="obs1">
+        <span class="obs-icon">📍</span>
+        <span class="obs-label">Distance</span>
+    </div>
+    <div class="obstacle" id="obs2">
+        <span class="obs-icon">🕰️</span>
+        <span class="obs-label">Time</span>
+    </div>
+    <div class="obstacle" id="obs3">
+        <span class="obs-icon">💔</span>
+        <span class="obs-label">Hard days</span>
+    </div>
+
+    <div class="knot" id="userKnot"></div>
+    <div class="knot-end" id="endKnot"></div>
+
+    <div class="final-layer" id="finalLayer">
+        <div class="heart-merge">❤</div>
+        <div class="final-text">
+            No matter what happened...<br>
+            the thread always led me back to you.
+        </div>
+        <button class="next-btn" onclick="nextPage()">Uncover our hidden message &rarr;</button>
+    </div>
+
+    <script>
+        /* --- CONFIGURATION --- */
+        const svg = document.getElementById('threadSvg');
+        const pathDim = document.getElementById('pathDim');
+        const pathLit = document.getElementById('pathLit');
+        const userKnot = document.getElementById('userKnot');
+        const endKnot = document.getElementById('endKnot');
+        const introUI = document.getElementById('introUI');
+        
+        const obstacles = [
+            { el: document.getElementById('obs1'), pct: 0.25 },
+            { el: document.getElementById('obs2'), pct: 0.50 },
+            { el: document.getElementById('obs3'), pct: 0.75 }
+        ];
+
+        let pathLength = 0;
+        let isDragging = false;
+        let progress = 0; // 0 to 1
+        let isComplete = false;
+
+        /* --- RESIZE & PATH GENERATION --- */
+        function initPath() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
+            // Create a winding path from top-left to bottom-rightish
+            // M x y Q c1x c1y x y ...
+            // We want it to snake down
+            
+            const startX = w * 0.2;
+            const startY = h * 0.15;
+            const endX = w * 0.8;
+            const endY = h * 0.85;
+            
+            const midY = (startY + endY) / 2;
+            
+            // S-Curve definition
+            const d = `
+                M ${startX} ${startY}
+                C ${w*0.8} ${startY}, ${w*0.1} ${midY}, ${w*0.5} ${midY}
+                C ${w*0.9} ${midY}, ${w*0.2} ${endY}, ${endX} ${endY}
+            `;
+            
+            pathDim.setAttribute('d', d);
+            pathLit.setAttribute('d', d);
+            
+            pathLength = pathDim.getTotalLength();
+            
+            // Set initial dash offset
+            pathLit.style.strokeDasharray = pathLength;
+            pathLit.style.strokeDashoffset = pathLength;
+            
+            // Position Knots
+            const startPt = pathDim.getPointAtLength(0);
+            const endPt = pathDim.getPointAtLength(pathLength);
+            
+            updateKnotPos(userKnot, startPt);
+            updateKnotPos(endKnot, endPt);
+            
+            // Position Obstacles
+            obstacles.forEach(obs => {
+                const pt = pathDim.getPointAtLength(pathLength * obs.pct);
+                obs.el.style.left = pt.x + 'px';
+                obs.el.style.top = pt.y + 'px';
+            });
+        }
+        
+        function updateKnotPos(el, pt) {
+            el.style.left = pt.x + 'px';
+            el.style.top = pt.y + 'px';
+        }
+
+        window.addEventListener('resize', initPath);
+        initPath();
+
+        /* --- INTERACTION --- */
+        userKnot.addEventListener('mousedown', startDrag);
+        userKnot.addEventListener('touchstart', startDrag, {passive: false});
+        
+        window.addEventListener('mousemove', onDrag);
+        window.addEventListener('touchmove', onDrag, {passive: false});
+        
+        window.addEventListener('mouseup', stopDrag);
+        window.addEventListener('touchend', stopDrag);
+
+        function startDrag(e) {
+            if(isComplete) return;
+            isDragging = true;
+            userKnot.classList.add('dragging');
+            introUI.style.opacity = 0; // Fade out title on start
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            userKnot.classList.remove('dragging');
+        }
+
+        function onDrag(e) {
+            if(!isDragging || isComplete) return;
+            e.preventDefault();
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            // Find closest point on path logic (Simplified)
+            // We map vertical scroll position (Y) to progress roughly
+            // This is a UX hack: dragging DOWN advances the thread
+            
+            // Calculate a rough progress based on Y position relative to start/end Y
+            const startY = parseFloat(userKnot.style.top); // Current pos
+            const bounds = pathDim.getBoundingClientRect();
+            const relativeY = clientY - bounds.top;
+            
+            // More intuitive: Move "forward" if drag moves away from start
+            // Let's just increment progress if cursor is "further along" logic
+            // Simple mapping: 
+            
+            // Iterate through path precision to find closest point (Costly but smooth)
+            // Optimization: Only search neighborhood of current progress
+            
+            let bestDist = Infinity;
+            let bestP = progress;
+            
+            // Search ahead
+            const searchWindow = 0.1; // Look 10% ahead/behind
+            const step = 0.005;
+            
+            let minSearch = Math.max(0, progress - 0.02);
+            let maxSearch = Math.min(1, progress + 0.15); // Bias forward
+            
+            for(let p = minSearch; p <= maxSearch; p += step) {
+                const pt = pathDim.getPointAtLength(p * pathLength);
+                const dx = clientX - pt.x;
+                const dy = clientY - pt.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if(dist < bestDist) {
+                    bestDist = dist;
+                    bestP = p;
+                }
+            }
+            
+            // Only allow moving forward mostly
+            if(bestP > progress) {
+                progress = bestP;
+                updateState();
+            }
+        }
+
+        function updateState() {
+            // Move Knot
+            const pt = pathDim.getPointAtLength(progress * pathLength);
+            updateKnotPos(userKnot, pt);
+            
+            // Light up path
+            pathLit.style.strokeDashoffset = pathLength * (1 - progress);
+            
+            // Check obstacles
+            obstacles.forEach(obs => {
+                if(progress >= obs.pct && !obs.triggered) {
+                    obs.triggered = true;
+                    obs.el.classList.add('active');
+                    if(navigator.vibrate) navigator.vibrate(40);
+                }
+            });
+            
+            // Check Completion
+            if(progress >= 0.98) {
+                finishSequence();
+            }
+        }
+
+        /* --- FINALE --- */
+        function finishSequence() {
+            isComplete = true;
+            stopDrag();
+            
+            // 1. Move both knots to center
+            const centerPt = pathDim.getPointAtLength(pathLength * 0.5);
+            
+            userKnot.style.transition = "all 1.5s cubic-bezier(0.25, 1, 0.5, 1)";
+            endKnot.style.transition = "all 1.5s cubic-bezier(0.25, 1, 0.5, 1)";
+            
+            userKnot.style.left = centerPt.x + 'px';
+            userKnot.style.top = centerPt.y + 'px';
+            
+            endKnot.style.background = "#f43f5e"; // Turn red
+            endKnot.style.left = centerPt.x + 'px';
+            endKnot.style.top = centerPt.y + 'px';
+            endKnot.style.transform = "translate(-50%, -50%) scale(1.5)";
+            
+            // 2. Hide Obstacles & Path
+            pathLit.style.transition = "opacity 1s";
+            pathLit.style.opacity = 0;
+            pathDim.style.opacity = 0;
+            document.querySelectorAll('.obstacle').forEach(el => el.style.opacity = 0);
+            
+            // 3. Boom
+            if(navigator.vibrate) navigator.vibrate([50, 50, 100]);
+            
+            // 4. Show Heart & Text
+            setTimeout(() => {
+                userKnot.style.opacity = 0;
+                endKnot.style.opacity = 0;
+                document.getElementById('finalLayer').style.opacity = 1;
+                document.querySelector('.heart-merge').style.transform = "scale(1)";
+            }, 1200);
+        }
+
+        /* --- STAR BACKGROUND --- */
+        const sCanvas = document.getElementById('star-canvas');
+        const sCtx = sCanvas.getContext('2d');
+        let stars = [];
+
+        function initStars() {
+            sCanvas.width = window.innerWidth;
+            sCanvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<80; i++) {
+                stars.push({
+                    x: Math.random() * sCanvas.width,
+                    y: Math.random() * sCanvas.height,
+                    r: Math.random() * 1.5,
+                    a: Math.random()
+                });
+            }
+        }
+
+        function drawStars() {
+            sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+            sCtx.fillStyle = "white";
+            stars.forEach(s => {
+                s.a += (Math.random() - 0.5) * 0.05;
+                if(s.a < 0) s.a = 0; if(s.a > 1) s.a = 1;
+                sCtx.globalAlpha = s.a;
+                sCtx.beginPath();
+                sCtx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                sCtx.fill();
+            });
+            requestAnimationFrame(drawStars);
+        }
+        initStars();
+        drawStars();
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                window.location.href = "love_jar.html";
+            }, 1500);
+        }
+
+    </script>
+</body>
+</html>

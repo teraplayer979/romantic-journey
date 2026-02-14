@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Soulmate Verification</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #0f172a;
+            --rose-primary: #be123c;
+            --rose-light: #fda4af;
+            --violet-glow: #7c3aed;
+            --gold-accent: #fbbf24;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            /* Deep romantic gradient */
+            background-image: 
+                radial-gradient(circle at 10% 20%, #312e81 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, #881337 0%, transparent 50%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            user-select: none;
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- MAIN CARD (CAPTCHA STYLE) --- */
+        .captcha-card {
+            position: relative;
+            z-index: 10;
+            width: 340px; /* Standard captcha size feel */
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px; /* Slightly boxier for captcha feel */
+            padding: 16px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            animation: floatUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* Header Section */
+        .captcha-header {
+            background: rgba(225, 29, 72, 0.2);
+            padding: 20px;
+            margin: -16px -16px 16px -16px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .header-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 5px;
+        }
+
+        .header-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .header-sub {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--rose-light);
+            font-style: italic;
+        }
+
+        /* Grid Section */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .grid-cell:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .grid-cell:active {
+            transform: scale(0.98);
+        }
+
+        .cell-icon {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.3);
+            transition: opacity 0.3s;
+        }
+
+        .cell-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0; left: 0;
+            opacity: 0;
+            transform: scale(1.1);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .cell-check {
+            position: absolute;
+            top: 5px; left: 5px;
+            width: 20px; height: 20px;
+            background: var(--rose-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 5;
+        }
+
+        /* Active State for Cell */
+        .grid-cell.has-photo .cell-img { opacity: 1; transform: scale(1); }
+        .grid-cell.has-photo .cell-icon { opacity: 0; }
+        .grid-cell.has-photo .cell-check { opacity: 1; transform: scale(1); }
+        .grid-cell.has-photo { border-color: var(--rose-light); }
+
+        /* Footer / Button */
+        .captcha-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .verify-icon {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.4);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: not-allowed;
+            transition: all 0.3s;
+        }
+
+        .action-btn.active {
+            background: var(--rose-primary);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(190, 18, 60, 0.4);
+        }
+
+        .action-btn.success {
+            background: #10b981; /* Green */
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        /* --- SCANNING ANIMATION --- */
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 4px;
+            background: var(--rose-light);
+            box-shadow: 0 0 15px var(--rose-light);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .scanning .scan-line {
+            opacity: 1;
+            animation: scanMove 2s cubic-bezier(0.45, 0, 0.55, 1);
+        }
+
+        .scanning .grid-cell {
+            filter: brightness(1.2);
+            transition: filter 0.2s;
+        }
+
+        /* --- FINAL SUCCESS OVERLAY --- */
+        .final-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            text-align: center;
+        }
+
+        .final-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--gold-accent);
+            margin-bottom: 10px;
+            transform: translateY(20px);
+            transition: transform 1s ease;
+        }
+
+        .final-sub {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: white;
+            opacity: 0.8;
+        }
+
+        .next-btn {
+            margin-top: 30px;
+            background: transparent;
+            border: 1px solid var(--rose-light);
+            color: white;
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease 0.5s;
+        }
+
+        .next-btn.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes floatUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes scanMove {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; opacity: 0; }
+        }
+
+        /* Tiny floating heart when clicking */
+        .click-heart {
+            position: absolute;
+            color: var(--rose-light);
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatHeart 1s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatHeart {
+            0% { transform: scale(0) translateY(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.5) translateY(-40px); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="captcha-card" id="card">
+        
+        <div class="captcha-header">
+            <div class="header-label">Soulmate Verification</div>
+            <div class="header-title">Select all images of<br>the one you love.</div>
+            <div class="header-sub">Only true lovers pass this test.</div>
+        </div>
+
+        <div class="scan-line"></div>
+
+        <div class="grid-container" id="grid">
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+            <div class="grid-cell" onclick="handleCellClick(this)"><div class="cell-icon">❤</div><img class="cell-img"><div class="cell-check">✓</div></div>
+        </div>
+
+        <div class="captcha-footer">
+            <div class="verify-icon">↺</div>
+            <button class="action-btn" id="verifyBtn" onclick="verifyLove()">Verify</button>
+        </div>
+
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
+    <div class="final-overlay" id="finalOverlay">
+        <div class="final-title">Human Verified.<br>Lover Verified.</div>
+        <div class="final-sub">You are my soulmate.</div>
+        <button class="next-btn" id="nextBtn" onclick="nextPage()">Continue our story &rarr;</button>
+    </div>
+
+    <script>
+        /* --- VARIABLES --- */
+        const fileInput = document.getElementById('fileInput');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const card = document.getElementById('card');
+        const finalOverlay = document.getElementById('finalOverlay');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let activeCell = null;
+        let photosAdded = 0;
+        let isVerifying = false;
+
+        /* --- INTERACTION HANDLERS --- */
+        function handleCellClick(cell) {
+            if (isVerifying) return;
+
+            activeCell = cell;
+            fileInput.click();
+            
+            // Haptic
+            if(navigator.vibrate) navigator.vibrate(20);
+        }
+
+        // Handle File Selection
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = activeCell.querySelector('.cell-img');
+                    img.src = e.target.result;
+                    
+                    if (!activeCell.classList.contains('has-photo')) {
+                        activeCell.classList.add('has-photo');
+                        photosAdded++;
+                        updateButtonState();
+                        spawnHeart(activeCell);
+                    }
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+            // Reset input so same file can be selected again
+            fileInput.value = '';
+        });
+
+        function updateButtonState() {
+            if (photosAdded > 0) {
+                verifyBtn.classList.add('active');
+                verifyBtn.style.cursor = 'pointer';
+                verifyBtn.innerText = "Verify Love";
+            }
+        }
+
+        function spawnHeart(element) {
+            const rect = element.getBoundingClientRect();
+            const heart = document.createElement('div');
+            heart.classList.add('click-heart');
+            heart.innerText = "❤️";
+            heart.style.left = (rect.left + rect.width/2 - 10) + 'px';
+            heart.style.top = (rect.top + rect.height/2 - 10) + 'px';
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 1000);
+        }
+
+        /* --- VERIFICATION LOGIC --- */
+        function verifyLove() {
+            if (photosAdded === 0 || isVerifying) return;
+            isVerifying = true;
+
+            // 1. Start Scanning Animation
+            card.classList.add('scanning');
+            verifyBtn.innerText = "Analyzing heart...";
+            
+            // Haptic Scan Pattern
+            if(navigator.vibrate) navigator.vibrate([30, 50, 30, 50]);
+
+            // 2. Mid-Process Text
+            setTimeout(() => {
+                verifyBtn.innerText = "Searching memories...";
+            }, 1000);
+
+            // 3. Success
+            setTimeout(() => {
+                verifyBtn.classList.remove('active');
+                verifyBtn.classList.add('success');
+                verifyBtn.innerText = "Match Found";
+                
+                // Stop scanning
+                card.classList.remove('scanning');
+                
+                // Show Overlay
+                showFinalState();
+            }, 2500);
+        }
+
+        function showFinalState() {
+            // Dim Grid
+            document.getElementById('grid').style.opacity = '0.3';
+            document.querySelector('.captcha-header').style.opacity = '0.3';
+            
+            // Fade in Overlay
+            finalOverlay.style.opacity = 1;
+            finalOverlay.style.pointerEvents = 'auto';
+
+            // Haptic Success
+            if(navigator.vibrate) navigator.vibrate([50, 50, 100]);
+
+            setTimeout(() => {
+                nextBtn.classList.add('visible');
+            }, 1000);
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initParticles() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            particles = [];
+            for(let i=0; i<40; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 2,
+                    speedY: Math.random() * 0.5 + 0.1,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(253, 164, 175, 0.4)"; // Rose dust
+            
+            particles.forEach(p => {
+                p.y -= p.speedY;
+                if(p.y < 0) p.y = height;
+                
+                ctx.globalAlpha = p.opacity;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        animateParticles();
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                // Redirect to next page
+                window.location.href = "first_text_replay.html"; 
+            }, 1500);
+        }
+
+    </script>
+
+</body>
+</html>

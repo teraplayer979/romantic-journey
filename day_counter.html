@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time With You</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #0f172a;
+            --rose-glow: #be123c;
+            --violet-haze: #4c1d95;
+            --gold-accent: #fbbf24;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            /* A deep, romantic gradient moving from warm heart to cool night */
+            background-image: radial-gradient(circle at 50% 30%, #311726 0%, #0f172a 70%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- PARTICLES --- */
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- INTRO TEXT --- */
+        .intro-text {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards 0.5s;
+            font-style: italic;
+        }
+
+        /* --- MAIN COUNTER --- */
+        .counter-wrapper {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        /* The Glow behind the number */
+        .heartbeat-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px; height: 120px;
+            background: radial-gradient(circle, rgba(253, 164, 175, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        .main-number {
+            font-family: var(--font-display);
+            font-size: 5.5rem;
+            line-height: 1;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #fda4af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(225, 29, 72, 0.3);
+            display: inline-block;
+            opacity: 0; /* JS handles fade in */
+            transform: scale(0.9);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .main-label {
+            display: block;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 1s;
+        }
+
+        /* --- SECONDARY STATS --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            margin-bottom: 40px;
+            opacity: 0; /* JS fades this in */
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .stat-num {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-family: var(--font-body);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        /* --- EMOTIONAL LINE --- */
+        .emotional-line {
+            font-family: var(--font-script);
+            font-size: 1.8rem;
+            color: var(--gold-accent);
+            text-align: center;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 1s ease;
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+        }
+
+        /* --- BUTTON --- */
+        .next-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+
+        .next-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { opacity: 0.8; }
+            100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+        }
+
+        /* Floating Hearts Class */
+        .mini-heart {
+            position: absolute;
+            color: var(--rose-glow);
+            font-size: 1.2rem;
+            pointer-events: none;
+            animation: floatUp 3s ease-out forwards;
+            z-index: 5;
+        }
+
+        /* Visibility Helper */
+        .visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="container">
+        
+        <div class="intro-text">
+            Every day with you has been a gift.
+        </div>
+
+        <div class="counter-wrapper">
+            <div class="heartbeat-glow"></div>
+            <div class="main-number" id="dayCounter">0</div>
+            <span class="main-label">Days since our story began</span>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <span class="stat-num" id="statYears">0</span>
+                <span class="stat-label">Years</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" id="statMonths">0</span>
+                <span class="stat-label">Months</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" id="statHours">0</span>
+                <span class="stat-label">Hours</span>
+            </div>
+        </div>
+
+        <div class="emotional-line" id="emoLine">
+            And I’d choose you again<br>for every single one of them.
+        </div>
+
+        <button class="next-btn" id="nextBtn" onclick="nextPage()">See our stars &rarr;</button>
+
+    </div>
+
+    <script>
+        /* --- CONFIGURATION --- */
+        // START DATE: Format YYYY-MM-DD
+        const startDate = new Date("2023-01-01"); 
+
+        /* --- ELEMENTS --- */
+        const counterEl = document.getElementById('dayCounter');
+        const statsGrid = document.getElementById('statsGrid');
+        const emoLine = document.getElementById('emoLine');
+        const nextBtn = document.getElementById('nextBtn');
+        const statYears = document.getElementById('statYears');
+        const statMonths = document.getElementById('statMonths');
+        const statHours = document.getElementById('statHours');
+
+        /* --- TIME CALCULATION --- */
+        const now = new Date();
+        const diffTime = Math.abs(now - startDate);
+        const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Approximate calculation for display visuals
+        const years = Math.floor(totalDays / 365);
+        const remainingDays = totalDays % 365;
+        const months = Math.floor(remainingDays / 30);
+        const totalHours = totalDays * 24;
+
+        /* --- ANIMATION LOGIC --- */
+        function animateCounter(element, target, duration) {
+            let start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Ease Out Quart: 1 - (1 - t)^4
+                const ease = 1 - Math.pow(1 - progress, 4);
+                
+                const currentVal = Math.floor(ease * target);
+                element.innerText = currentVal.toLocaleString(); // Add commas
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.innerText = target.toLocaleString();
+                    onCounterFinish();
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        // Simple linear count for smaller numbers
+        function animateSmallStat(element, target) {
+            let current = 0;
+            const step = Math.ceil(target / 50);
+            const interval = setInterval(() => {
+                current += step;
+                if(current >= target) {
+                    current = target;
+                    clearInterval(interval);
+                }
+                element.innerText = current;
+            }, 30);
+        }
+
+        function startSequence() {
+            // 1. Reveal Main Counter
+            counterEl.style.opacity = 1;
+            counterEl.style.transform = "scale(1)";
+            
+            // Start counting
+            animateCounter(counterEl, totalDays, 2500);
+        }
+
+        function onCounterFinish() {
+            // Trigger visuals
+            spawnHearts();
+            
+            // Haptic
+            if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+            // 2. Reveal Stats
+            statsGrid.classList.add('visible');
+            animateSmallStat(statYears, years);
+            animateSmallStat(statMonths, months);
+            
+            // Format hours with k for aesthetic if too long, or full number
+            statHours.innerText = totalHours.toLocaleString(); 
+
+            // 3. Reveal Line
+            setTimeout(() => {
+                emoLine.classList.add('visible');
+            }, 800);
+
+            // 4. Reveal Button
+            setTimeout(() => {
+                nextBtn.classList.add('visible');
+            }, 2000);
+        }
+
+        /* --- PARTICLE SYSTEM --- */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initParticles() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            particles = [];
+            for(let i=0; i<40; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 1.5,
+                    d: Math.random() * 0.5,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+                p.y -= p.d; // Float up
+                if(p.y < 0) p.y = height;
+            });
+            requestAnimationFrame(drawParticles);
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        drawParticles();
+
+        /* --- VISUAL EFFECTS --- */
+        function spawnHearts() {
+            const rect = counterEl.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for(let i=0; i<15; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.classList.add('mini-heart');
+                    heart.innerText = "❤";
+                    
+                    const offsetX = (Math.random() - 0.5) * 150;
+                    const offsetY = (Math.random() - 0.5) * 50;
+                    
+                    heart.style.left = (centerX + offsetX) + 'px';
+                    heart.style.top = (centerY + offsetY) + 'px';
+                    
+                    document.body.appendChild(heart);
+                    setTimeout(() => heart.remove(), 3000);
+                }, i * 100);
+            }
+        }
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                // Redirect
+                window.location.href = "constellation_of_us.html";
+                // alert("Navigating to Constellation..."); // Debug
+            }, 1500);
+        }
+
+        // Init
+        window.onload = () => {
+            setTimeout(startSequence, 500);
+        };
+
+    </script>
+
+</body>
+</html>

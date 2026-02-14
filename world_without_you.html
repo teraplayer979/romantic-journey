@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Forest of Us</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --forest-grey: #1a1a1a;
+            --forest-bloom: #2d5a27;
+            --flower-pink: #f43f5e;
+            --sky-warm: #ffcf33;
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #000;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- THE CINEMATIC FOREST STAGE --- */
+        #forest-world {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            /* Starts monochrome and cold */
+            filter: grayscale(1) brightness(0.5) sepia(0.2);
+            transition: filter 3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(to bottom, #111, #222);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        /* Scenery Layers */
+        .sky-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 60%;
+            background: radial-gradient(circle at 50% 100%, #1e293b, #000);
+            transition: background 3s ease;
+        }
+
+        .forest-floor {
+            position: relative;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(to top, #0f172a, transparent);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding-bottom: 20px;
+        }
+
+        /* Withered Flowers & Leaves */
+        .plant {
+            width: 40px;
+            height: 100px;
+            background: #333;
+            border-radius: 50% 50% 0 0;
+            position: relative;
+            transition: all 4s ease;
+            transform: scaleY(0.6) rotate(-5deg); /* Droopy */
+            filter: blur(1px);
+        }
+
+        .flower-head {
+            position: absolute;
+            top: -15px; left: 50%;
+            transform: translateX(-50%);
+            width: 20px; height: 20px;
+            background: #444;
+            border-radius: 50%;
+            transition: all 4s ease;
+        }
+
+        /* --- INTERACTIVE TRIGGER --- */
+        .hold-zone {
+            position: absolute;
+            z-index: 50;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .touch-point {
+            width: 80px; height: 80px;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .touch-point::after {
+            content: '';
+            width: 12px; height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #fff;
+            animation: pulse 2s infinite;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .narrative {
+            position: absolute;
+            top: 20%;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            padding: 0 30px;
+            pointer-events: none;
+        }
+
+        .line {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-style: italic;
+            opacity: 0;
+            transition: all 2s ease;
+            transform: translateY(10px);
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .final-reveal {
+            font-family: var(--font-script);
+            font-size: 2.5rem;
+            color: var(--sky-warm);
+            display: none;
+            text-shadow: 0 0 20px rgba(255, 207, 51, 0.4);
+        }
+
+        /* --- ANIMATION STATES --- */
+        .healing #forest-world {
+            filter: grayscale(0) brightness(1) sepia(0);
+        }
+
+        .healing .sky-layer {
+            background: radial-gradient(circle at 50% 100%, #fcd34d, #4a90e2);
+        }
+
+        .healing .plant {
+            background: var(--forest-bloom);
+            transform: scaleY(1) rotate(0deg);
+            filter: blur(0);
+        }
+
+        .healing .flower-head {
+            background: var(--flower-pink);
+            transform: translateX(-50%) scale(1.5);
+            box-shadow: 0 0 15px var(--flower-pink);
+        }
+
+        .next-btn {
+            position: absolute;
+            bottom: 10%;
+            background: transparent;
+            border: 1px solid var(--sky-warm);
+            color: var(--sky-warm);
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: var(--font-display);
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+            backdrop-filter: blur(5px);
+            z-index: 60;
+        }
+
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.5); opacity: 1; } }
+        .visible { opacity: 1 !important; transform: translateY(0) !important; }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="forest-world">
+        <div class="sky-layer"></div>
+        <div class="forest-floor">
+            <div class="plant"><div class="flower-head"></div></div>
+            <div class="plant" style="height: 140px; animation-delay: 0.5s;"><div class="flower-head"></div></div>
+            <div class="plant" style="height: 80px; animation-delay: 0.2s;"><div class="flower-head"></div></div>
+            <div class="plant" style="height: 120px; animation-delay: 0.8s;"><div class="flower-head"></div></div>
+        </div>
+    </div>
+
+    <div class="narrative">
+        <p class="line" id="line1">In a world that felt cold and dry...</p>
+        <p class="line" id="line2">everything was waiting for you.</p>
+        <h2 class="final-reveal" id="finalMsg">You are my eternal spring.</h2>
+    </div>
+
+    <div class="hold-zone" id="holdZone">
+        <div class="touch-point" id="touchPoint"></div>
+        <p id="hintText" style="font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Hold to heal the forest</p>
+    </div>
+
+    <button class="next-btn" id="nextBtn" onclick="nextPage()">I never want to lose this &rarr;</button>
+
+    <script>
+        const zone = document.getElementById('holdZone');
+        const nextBtn = document.getElementById('nextBtn');
+        const finalMsg = document.getElementById('finalMsg');
+        
+        let progress = 0;
+        let isHolding = false;
+        let timer;
+
+        window.onload = () => {
+            setTimeout(() => document.getElementById('line1').classList.add('visible'), 1000);
+            setTimeout(() => document.getElementById('line2').classList.add('visible'), 3000);
+        };
+
+        function startHold(e) {
+            e.preventDefault();
+            isHolding = true;
+            document.body.classList.add('healing');
+            document.getElementById('hintText').style.opacity = 0;
+            if (navigator.vibrate) navigator.vibrate(20);
+            animateGrowth();
+        }
+
+        function endHold() {
+            isHolding = false;
+            if (progress < 100) {
+                document.body.classList.remove('healing');
+                document.getElementById('hintText').style.opacity = 1;
+            }
+            cancelAnimationFrame(timer);
+        }
+
+        function animateGrowth() {
+            if (!isHolding) return;
+            
+            progress += 0.5;
+            
+            if (progress >= 100) {
+                finishHealing();
+                return;
+            }
+            
+            timer = requestAnimationFrame(animateGrowth);
+        }
+
+        function finishHealing() {
+            zone.style.display = 'none';
+            document.getElementById('line1').style.display = 'none';
+            document.getElementById('line2').style.display = 'none';
+            
+            setTimeout(() => {
+                finalMsg.style.display = 'block';
+                setTimeout(() => finalMsg.classList.add('visible'), 100);
+                setTimeout(() => nextBtn.classList.add('visible'), 2000);
+            }, 500);
+        }
+
+        zone.addEventListener('mousedown', startHold);
+        zone.addEventListener('touchstart', startHold);
+        window.addEventListener('mouseup', endHold);
+        window.addEventListener('touchend', endHold);
+
+        function nextPage() {
+            document.body.style.transition = 'opacity 1.5s ease';
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                window.location.href = "ten_thousand_days.html";
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

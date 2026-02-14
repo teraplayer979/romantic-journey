@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Love Card</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Dancing+Script:wght@600&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,600;1,600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #05020a;
+            --text-main: #ffffff;
+            --gold: #d4af37;
+            --rose: #e11d48;
+            --card-width: 340px;
+            --card-height: 215px;
+
+            /* Fonts */
+            --font-display: 'Playfair Display', serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-hand: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #05020a 70%);
+            min-height: 100vh;
+            width: 100vw;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            perspective: 1200px;
+        }
+
+        /* Ambient Background */
+        #ambient-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            filter: blur(40px) brightness(0.4);
+            z-index: 0;
+            transition: opacity 2s ease;
+            pointer-events: none;
+        }
+
+        /* --- PREVIEW STAGE (The Card) --- */
+        .preview-stage {
+            position: relative;
+            z-index: 100; /* Always on top */
+            width: var(--card-width);
+            height: var(--card-height);
+            transform-style: preserve-3d;
+            transition: all 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            margin-bottom: 30px;
+        }
+
+        .preview-stage.finalized {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.1) !important; /* Force center */
+            margin: 0;
+        }
+
+        .card-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+
+        .card-wrapper.flipped { transform: rotateY(180deg); }
+
+        /* --- CARD FACES --- */
+        .face {
+            position: absolute;
+            width: 100%; height: 100%;
+            /* Robust Backface Hiding */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translate3d(0,0,0); /* Hardware acceleration */
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: #1a1a1a;
+            transition: opacity 0.1s; /* Quick fade for fix */
+        }
+
+        /* Styles */
+        .style-glass .face.front { background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.3); }
+        .style-glass .overlay-content { background: linear-gradient(to top, rgba(225, 29, 72, 0.6), transparent 70%); }
+
+        .style-premium .face.front { border: none; }
+        .style-premium .overlay-content { background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%, rgba(0,0,0,0.4) 100%); }
+
+        .style-dark .face.front { border: 1px solid var(--gold); }
+        .style-dark .overlay-content { background: radial-gradient(circle at center, transparent 30%, #0a0510 100%); box-shadow: inset 0 0 0 2px var(--gold); }
+        .style-dark .card-text { color: var(--gold); }
+
+        /* Image Layer */
+        .card-img-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            background: #222;
+        }
+        
+        .card-img {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform-origin: center;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            will-change: transform;
+        }
+
+        /* Front Content */
+        .overlay-content {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .bank-logo { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+        
+        /* Fixed SVG Icon */
+        .contactless-icon { width: 24px; height: 24px; fill: currentColor; opacity: 0.8; }
+
+        .chip-sim {
+            width: 35px; height: 25px;
+            background: linear-gradient(135deg, #fcd34d, #d97706);
+            border-radius: 4px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .chip-sim::after {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px);
+            opacity: 0.3;
+        }
+
+        .card-number { font-size: 1.3rem; letter-spacing: 3px; margin-bottom: 10px; font-family: var(--font-mono); }
+        .card-meta { display: flex; justify-content: space-between; font-size: 0.7rem; text-transform: uppercase; }
+        .meta-val { font-size: 0.9rem; letter-spacing: 1px; }
+
+        /* BACK Face - Explicitly Solid Background */
+        .face.back { 
+            transform: rotateY(180deg); 
+            background-color: #0f0f0f !important; /* Ensure opacity */
+            background-image: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
+            color: #ccc; 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 2; /* Ensure sorting */
+        }
+        .mag-strip { width: 100%; height: 40px; background: #000; margin-top: 25px; }
+        .cvv-strip { 
+            width: 80%; height: 30px; background: #fff; margin: 15px auto; 
+            color: #000; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; 
+            font-family: var(--font-hand); font-size: 1.2rem;
+        }
+        .transactions { padding: 15px; font-size: 0.8rem; font-family: var(--font-mono); }
+        .txn-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .txn-val { color: #4ade80; }
+        .back-footer { margin-top: auto; padding: 20px; text-align: center; }
+        .balance-val { font-size: 1.4rem; color: var(--gold); font-family: var(--font-display); }
+
+        /* --- CONTROLS --- */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            position: relative;
+            z-index: 50;
+        }
+        
+        .app-container.minimized {
+            opacity: 0;
+            pointer-events: none;
+            /* Don't use height:0 or overflow:hidden as it might shift layout abruptly */
+            position: fixed; 
+            top: -1000px;
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        h2 { font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 20px; text-align: center; }
+        .control-group { margin-bottom: 20px; }
+        .control-label { display: block; font-size: 0.75rem; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+
+        .style-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .style-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid transparent; padding: 10px; border-radius: 8px;
+            color: white; cursor: pointer; transition: 0.2s;
+        }
+        .style-btn:hover { background: rgba(255,255,255,0.2); }
+        .style-btn.active { background: var(--rose); border-color: white; }
+
+        input[type="text"] {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px; border-radius: 6px; color: white; margin-bottom: 8px;
+        }
+
+        .photo-controls { border: 1px dashed rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; text-align: center; }
+        input[type="file"] { display: none; }
+        .file-label { display: block; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; margin-bottom: 10px; }
+        input[type="range"] { width: 100%; accent-color: var(--rose); }
+
+        .mint-btn {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #e11d48, #be123c);
+            color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: 700; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(225, 29, 72, 0.4);
+        }
+
+        /* --- FINAL UI --- */
+        .final-ui {
+            position: fixed; bottom: 40px; left: 0; width: 100%;
+            text-align: center; opacity: 0; pointer-events: none; transition: opacity 1s ease;
+            z-index: 200;
+        }
+
+        .check-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.4);
+            color: white; padding: 12px 30px; border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px);
+            margin-bottom: 20px;
+        }
+
+        .final-msg { font-family: var(--font-hand); font-size: 1.8rem; margin-bottom: 20px; opacity: 0; transition: 1s; }
+        
+        .next-btn {
+            background: transparent; border: 1px solid var(--rose); color: white; padding: 14px 40px;
+            border-radius: 50px; cursor: pointer; opacity: 0; transition: 1s;
+        }
+        .next-btn:hover { background: var(--rose); }
+
+        .visible { opacity: 1 !important; pointer-events: auto !important; }
+
+        /* Utility for Nuclear Fix */
+        .force-hide { opacity: 0 !important; visibility: hidden !important; }
+
+    </style>
+</head>
+<body>
+
+    <div id="ambient-bg"></div>
+
+    <div class="preview-stage" id="previewStage">
+        <div class="card-wrapper" id="cardWrapper">
+            <div class="face front" id="faceFront">
+                <div class="card-img-container" id="imgContainer">
+                    <img src="" class="card-img" id="cardImg" alt="">
+                </div>
+                
+                <div class="overlay-content">
+                    <div class="card-header">
+                        <div class="bank-logo card-text"><span style="font-size:1.2rem; color:var(--rose);">♥</span> HEART BANK</div>
+                        <svg class="contactless-icon card-text" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                            <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="card-main-info">
+                        <div class="chip-sim"></div>
+                        <div class="card-number card-text" id="dispNum">1402 2024 FOREVER</div>
+                        
+                        <div class="card-meta">
+                            <div class="meta-group">
+                                <span class="meta-label card-text">Card Holder</span>
+                                <span class="meta-val card-text" id="dispName">MY LOVE</span>
+                            </div>
+                            <div class="meta-group" style="text-align:right;">
+                                <span class="meta-label card-text">Valid Thru</span>
+                                <span class="meta-val card-text" id="dispDate">INFINITY</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="face back">
+                <div class="mag-strip"></div>
+                <div class="cvv-strip">LUV</div>
+                <div class="transactions">
+                    <div style="border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;">RECENT TRANSACTIONS</div>
+                    <div class="txn-row"><span>Hug</span><span class="txn-val">+1</span></div>
+                    <div class="txn-row"><span>Kisses</span><span class="txn-val">+3</span></div>
+                    <div class="txn-row"><span>"I love you"</span><span class="txn-val">+∞</span></div>
+                </div>
+                <div class="back-footer">
+                    <div class="balance-label">Current Balance</div>
+                    <div class="balance-val">Endless Love</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="appUI">
+        <div class="controls-panel">
+            <h2>Design Your Card</h2>
+
+            <div class="control-group">
+                <span class="control-label">1. Card Style</span>
+                <div class="style-grid">
+                    <button class="style-btn active" onclick="setStyle('style-glass')">Glass</button>
+                    <button class="style-btn" onclick="setStyle('style-premium')">Premium</button>
+                    <button class="style-btn" onclick="setStyle('style-dark')">Dark</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">2. Upload Photo</span>
+                <div class="photo-controls">
+                    <label class="file-label">
+                        Choose Photo
+                        <input type="file" id="fileInput" accept="image/*">
+                    </label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:0.8rem">Zoom:</span>
+                        <input type="range" id="zoomSlider" min="0.5" max="3" step="0.1" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">3. Details</span>
+                <input type="text" id="inputName" placeholder="Name (e.g. My Love)">
+                <input type="text" id="inputNum" placeholder="Custom Text (e.g. 1402 FOREVER)">
+            </div>
+
+            <button class="mint-btn" onclick="finalizeCard()">Issue Premium Card</button>
+        </div>
+    </div>
+
+    <div class="final-ui" id="finalUI">
+        <button class="check-btn" onclick="flipCard()">Check Love Balance</button>
+        <div class="final-msg" id="finalMsg">You never have to earn my love.<br>You already own it.</div>
+        <button class="next-btn" id="nextBtn" onclick="nextPage()">Continue our journey &rarr;</button>
+    </div>
+
+    <script>
+        /* --- STATE --- */
+        const state = { style: 'style-glass', scale: 1, posX: 0, posY: 0, isDragging: false, startX: 0, startY: 0 };
+
+        /* --- DOM ELEMENTS --- */
+        const wrapper = document.getElementById('cardWrapper');
+        const cardImg = document.getElementById('cardImg');
+        const imgContainer = document.getElementById('imgContainer');
+        const previewStage = document.getElementById('previewStage');
+        const faceFront = document.getElementById('faceFront');
+        const ambientBg = document.getElementById('ambient-bg');
+
+        /* --- FUNCTIONS --- */
+        function setStyle(styleName) {
+            wrapper.className = `card-wrapper ${styleName}`;
+            document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        document.getElementById('inputName').addEventListener('input', e => document.getElementById('dispName').innerText = e.target.value.toUpperCase() || 'MY LOVE');
+        document.getElementById('inputNum').addEventListener('input', e => document.getElementById('dispNum').innerText = e.target.value.toUpperCase() || '1402 2024 FOREVER');
+
+        document.getElementById('fileInput').addEventListener('change', e => {
+            if(e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = evt => {
+                    cardImg.src = evt.target.result;
+                    ambientBg.style.backgroundImage = `url(${evt.target.result})`;
+                    ambientBg.style.opacity = 1;
+                    state.posX = 0; state.posY = 0; state.scale = 1;
+                    document.getElementById('zoomSlider').value = 1;
+                    updateImg();
+                    imgContainer.style.background = '#000';
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('zoomSlider').addEventListener('input', e => {
+            state.scale = parseFloat(e.target.value);
+            updateImg();
+        });
+
+        // Drag Logic
+        imgContainer.addEventListener('mousedown', startDrag);
+        imgContainer.addEventListener('touchstart', startDrag, {passive: false});
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, {passive: false});
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        function startDrag(e) {
+            e.preventDefault(); state.isDragging = true;
+            state.startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            state.startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            imgContainer.style.cursor = 'grabbing';
+        }
+
+        function drag(e) {
+            if(!state.isDragging) return;
+            e.preventDefault();
+            const x = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const y = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            state.posX += (x - state.startX); state.posY += (y - state.startY);
+            state.startX = x; state.startY = y;
+            updateImg();
+        }
+
+        function endDrag() { state.isDragging = false; imgContainer.style.cursor = 'default'; }
+        function updateImg() { cardImg.style.transform = `translate(-50%, -50%) translate(${state.posX}px, ${state.posY}px) scale(${state.scale})`; }
+
+        /* --- FINALIZE --- */
+        function finalizeCard() {
+            // Haptic
+            if(navigator.vibrate) navigator.vibrate(50);
+
+            // 1. Hide Controls
+            document.getElementById('appUI').classList.add('minimized');
+            
+            // 2. Center Card (Fixed Position)
+            previewStage.classList.add('finalized');
+            
+            // 3. Show Action Button
+            setTimeout(() => {
+                document.getElementById('finalUI').classList.add('visible');
+            }, 800);
+        }
+
+        /* --- FLIP LOGIC (THE FIX) --- */
+        let isFlipped = false;
+        function flipCard() {
+            if(isFlipped) return;
+            isFlipped = true;
+            
+            // 1. Add Flip Class
+            wrapper.classList.add('flipped');
+            
+            // 2. Hide Button
+            document.querySelector('.check-btn').style.opacity = 0;
+            
+            // 3. NUCLEAR FIX: Hide Front Face halfway through rotation (after 300ms)
+            // This prevents bleed-through on mobile browsers
+            setTimeout(() => {
+                faceFront.classList.add('force-hide');
+            }, 300);
+
+            if(navigator.vibrate) navigator.vibrate(30);
+
+            // 4. Reveal Final Messages
+            setTimeout(() => {
+                document.getElementById('finalMsg').classList.add('visible');
+                if(navigator.vibrate) navigator.vibrate([50, 50, 100]);
+                setTimeout(() => document.getElementById('nextBtn').classList.add('visible'), 1500);
+            }, 800);
+        }
+
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => window.location.href = "golden_ticket.html",1500);
+        }
+
+        // Init
+        setStyle('style-glass');
+
+    </script>
+
+</body>
+</html>
+

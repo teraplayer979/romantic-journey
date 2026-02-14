@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Your Golden Ticket</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #0a0510;
+            --gold-foil: #d4af37;
+            --rose-gold: #e6b8af;
+            --shimmer: rgba(255, 255, 255, 0.4);
+            --ticket-bg: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            
+            --font-display: 'Cinzel', serif; /* Luxurious Serif */
+            --font-hand: 'Dancing Script', cursive;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        /* --- AMBIENT BACKGROUND (Moving Clouds/Stars) --- */
+        .sky-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 100%, #2d1b4e 0%, #0a0510 80%);
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 4s infinite;
+        }
+
+        .cloud {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(20px);
+            animation: drift 60s linear infinite;
+        }
+
+        /* --- THE GOLDEN TICKET --- */
+        .ticket-container {
+            position: relative;
+            z-index: 10;
+            width: 320px;
+            height: 560px;
+            display: flex;
+            flex-direction: column;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out; /* Smooth tilt */
+        }
+
+        /* The Main Ticket Body */
+        .ticket-main {
+            position: relative;
+            width: 100%;
+            height: 440px;
+            background: var(--ticket-bg);
+            border-radius: 20px 20px 0 0;
+            border: 1px solid rgba(212, 175, 55, 0.3); /* Gold border */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        /* The Tearable Stub (Bottom) */
+        .ticket-stub {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            background: var(--ticket-bg);
+            border-radius: 0 0 20px 20px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-top: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            z-index: 2;
+            cursor: grab;
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .ticket-stub:active { cursor: grabbing; }
+
+        /* The Perforation Line */
+        .perforation {
+            position: absolute;
+            top: 438px; /* Overlap main and stub */
+            left: 5%;
+            width: 90%;
+            height: 4px;
+            z-index: 5;
+            background-image: linear-gradient(to right, #333 50%, transparent 50%);
+            background-size: 15px 100%;
+            opacity: 0.5;
+        }
+
+        /* --- HOLOGRAPHIC FOIL EFFECT --- */
+        .holo-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(
+                115deg, 
+                transparent 20%, 
+                rgba(212, 175, 55, 0.1) 40%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(212, 175, 55, 0.1) 60%, 
+                transparent 80%
+            );
+            background-size: 200% 200%;
+            background-position: 0% 0%;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            transition: background-position 0.1s;
+        }
+
+        /* --- TICKET CONTENT --- */
+        .ticket-header {
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .airline {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            color: var(--gold-foil);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .flight-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+        }
+
+        .code {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: #fff;
+            background: linear-gradient(to bottom, #fff, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .plane-icon {
+            font-size: 1.5rem;
+            color: var(--gold-foil);
+            transform: rotate(90deg);
+            filter: drop-shadow(0 0 5px var(--gold-foil));
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 0 25px;
+        }
+
+        .label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 2px;
+        }
+
+        .value {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            color: #e5e5e5;
+        }
+
+        .value.highlight {
+            color: var(--rose-gold);
+            font-weight: bold;
+        }
+
+        /* Stub Content */
+        .stub-content {
+            padding: 20px;
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .tear-hint {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold-foil);
+            animation: pulse 2s infinite;
+        }
+
+        .arrow-down {
+            margin-top: 5px;
+            font-size: 1.2rem;
+            color: var(--gold-foil);
+            animation: bounce 2s infinite;
+        }
+
+        /* --- FINAL REVEAL --- */
+        .message-layer {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease 0.5s;
+            z-index: 20;
+        }
+
+        .stamp-mark {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: #fff;
+            border: 4px solid #fff;
+            padding: 10px 20px;
+            display: inline-block;
+            transform: rotate(-10deg) scale(2);
+            opacity: 0;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5), inset 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .stamp-anim {
+            animation: stampCrash 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .final-text {
+            font-family: var(--font-hand);
+            font-size: 1.8rem;
+            color: var(--rose-gold);
+            margin-bottom: 20px;
+        }
+
+        .next-btn {
+            background: transparent;
+            border: 1px solid var(--gold-foil);
+            color: var(--gold-foil);
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .next-btn:hover {
+            background: var(--gold-foil);
+            color: #000;
+            box-shadow: 0 0 30px var(--gold-foil);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes drift {
+            from { transform: translateX(-100px); }
+            to { transform: translateX(100vw); }
+        }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+        
+        @keyframes stampCrash {
+            0% { opacity: 0; transform: scale(3) rotate(-10deg); }
+            100% { opacity: 1; transform: scale(1) rotate(-10deg); }
+        }
+
+        @keyframes fallAway {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(200px) rotate(20deg); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="sky-bg" id="sky"></div>
+
+    <div class="ticket-container" id="ticketWrapper">
+        
+        <div class="ticket-main">
+            <div class="holo-overlay"></div>
+            
+            <div class="ticket-header">
+                <div class="airline">Soulmate Airlines</div>
+            </div>
+
+            <div class="flight-row">
+                <div class="code">NOW</div>
+                <div class="plane-icon">✈</div>
+                <div class="code">4VR</div>
+            </div>
+
+            <div class="details-grid">
+                <div>
+                    <div class="label">Passenger</div>
+                    <div class="value highlight">My Love</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="label">Date</div>
+                    <div class="value">Today</div>
+                </div>
+                <div>
+                    <div class="label">Gate</div>
+                    <div class="value">Heart</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="label">Seat</div>
+                    <div class="value">1A</div>
+                </div>
+                <div>
+                    <div class="label">Class</div>
+                    <div class="value highlight">Forever</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="perforation"></div>
+
+        <div class="ticket-stub" id="stub">
+            <div class="holo-overlay"></div>
+            <div class="stub-content">
+                <div class="tear-hint">Slide down to tear</div>
+                <div class="arrow-down">↓</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="message-layer" id="finalUI">
+        <div class="stamp-mark" id="stamp">BOARDED</div>
+        <div class="final-text">Thank you for choosing this journey with me.</div>
+        <button class="next-btn" onclick="nextPage()">Continue our journey &rarr;</button>
+    </div>
+
+    <script>
+        /* --- STARS & CLOUDS --- */
+        const sky = document.getElementById('sky');
+        
+        for(let i=0; i<50; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 4 + 's';
+            sky.appendChild(star);
+        }
+
+        for(let i=0; i<3; i++) {
+            const cloud = document.createElement('div');
+            cloud.classList.add('cloud');
+            cloud.style.width = Math.random() * 200 + 100 + 'px';
+            cloud.style.height = cloud.style.width;
+            cloud.style.left = Math.random() * 100 + '%';
+            cloud.style.top = Math.random() * 50 + '%';
+            cloud.style.animationDuration = Math.random() * 30 + 30 + 's';
+            sky.appendChild(cloud);
+        }
+
+        /* --- HOLOGRAPHIC TILT --- */
+        const wrapper = document.getElementById('ticketWrapper');
+        const holos = document.querySelectorAll('.holo-overlay');
+
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.pageX) / 25;
+            const y = (window.innerHeight / 2 - e.pageY) / 25;
+            
+            // Tilt Ticket
+            wrapper.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+
+            // Move Hologram Gradient
+            holos.forEach(holo => {
+                holo.style.backgroundPosition = `${e.pageX/5}% ${e.pageY/5}%`;
+            });
+        });
+
+        // Mobile Tilt
+        wrapper.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const x = (window.innerWidth / 2 - touch.clientX) / 20;
+            const y = (window.innerHeight / 2 - touch.clientY) / 20;
+            wrapper.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        });
+
+        /* --- TEAR LOGIC --- */
+        const stub = document.getElementById('stub');
+        let isDragging = false;
+        let startY = 0;
+        let currentY = 0;
+        let isTorn = false;
+
+        stub.addEventListener('mousedown', startDrag);
+        stub.addEventListener('touchstart', startDrag, {passive: false});
+
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('touchmove', onDrag, {passive: false});
+
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        function startDrag(e) {
+            if(isTorn) return;
+            isDragging = true;
+            startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            stub.style.transition = 'none'; // Disable transition for direct control
+        }
+
+        function onDrag(e) {
+            if(!isDragging || isTorn) return;
+            e.preventDefault(); // Stop scroll
+
+            const y = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            currentY = y - startY;
+
+            // Only allow dragging down
+            if(currentY > 0) {
+                // Resistance
+                const translateY = Math.min(currentY, 150); 
+                const rotate = translateY / 5; // Mild rotation
+                stub.style.transform = `translateY(${translateY}px) rotate(${rotate}deg)`;
+
+                // Tear Threshold
+                if(translateY > 100) {
+                    performTear();
+                }
+            }
+        }
+
+        function endDrag() {
+            if(isTorn) return;
+            isDragging = false;
+            // Snap back
+            stub.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            stub.style.transform = `translateY(0) rotate(0)`;
+        }
+
+        function performTear() {
+            isDragging = false;
+            isTorn = true;
+
+            // 1. Animate Stub Falling Away
+            stub.style.transition = 'transform 1s ease-in, opacity 1s';
+            stub.style.transform = `translateY(400px) rotate(45deg)`;
+            stub.style.opacity = '0';
+
+            // 2. Haptic
+            if(navigator.vibrate) navigator.vibrate([50, 50, 100]);
+
+            // 3. Move Ticket Up & Center
+            setTimeout(() => {
+                document.querySelector('.ticket-main').style.borderBottom = '1px solid rgba(212, 175, 55, 0.3)';
+                document.querySelector('.ticket-main').style.borderRadius = '20px';
+                document.querySelector('.perforation').style.opacity = '0';
+            }, 200);
+
+            // 4. Show Final UI
+            setTimeout(() => {
+                document.getElementById('finalUI').style.opacity = 1;
+                document.getElementById('finalUI').style.pointerEvents = 'auto';
+                
+                // Stamp Animation
+                document.getElementById('stamp').classList.add('stamp-anim');
+            }, 800);
+        }
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                window.location.href = "relationship_wrapped.html";
+            }, 1500);
+        }
+
+    </script>
+</body>
+</html>

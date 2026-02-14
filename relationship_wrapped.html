@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Our Love Wrapped</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-deep: #1a0b2e;
+    --accent-purple: #764ba2;
+    --accent-rose: #ff758c;
+    --accent-gold: #f7bb97;
+    --text-white: #ffffff;
+
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-hand: 'Dancing Script', cursive;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: linear-gradient(135deg, #2d1b4e 0%, #0f172a 50%, #4c0519 100%);
+    height: 100vh;
+    overflow: hidden;
+    font-family: var(--font-body);
+    color: white;
+    position: relative;
+    transition: opacity 1s ease;
+}
+
+/* Background orbs */
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+    animation: float 10s infinite ease-in-out;
+}
+.orb-1 { width: 300px; height: 300px; background: var(--accent-purple); top: -50px; left: -50px; }
+.orb-2 { width: 400px; height: 400px; background: var(--accent-rose); bottom: -100px; right: -100px; }
+
+@keyframes float {
+    0%,100% { transform: translate(0,0); }
+    50% { transform: translate(30px,50px); }
+}
+
+/* Slides */
+.story-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+    transition: 0.5s;
+}
+
+.slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+.slide-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.slide-sub {
+    opacity: 0.8;
+}
+
+.stat-number {
+    font-size: 5rem;
+    color: var(--accent-gold);
+    margin: 20px 0;
+}
+
+/* Button */
+.next-btn {
+    margin-top: 40px;
+    background: linear-gradient(135deg, var(--accent-rose), #e11d48);
+    border: none;
+    color: white;
+    padding: 16px 40px;
+    border-radius: 50px;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+    pointer-events: none;
+    z-index: 999;
+}
+
+.next-btn.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Tap areas */
+.tap-area {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 30%;
+    z-index: 1; /* was 50 */
+}
+.tap-left { left: 0; }
+.tap-right { right: 0; }
+
+}
+
+</style>
+
+</head>
+<body>
+
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="tap-area tap-left" onclick="prevSlide()"></div>
+<div class="tap-area tap-right" onclick="nextSlide()"></div>
+
+<div class="story-container">
+
+<div class="slide active" id="slide-0">
+    <div class="slide-title">Your Love Story…<br>in numbers.</div>
+    <div class="slide-sub">A year of memories, laughter, and heartbeats.</div>
+</div>
+
+<div class="slide" id="slide-1">
+    <div class="slide-sub">Since our story began…</div>
+    <div class="stat-number">487</div>
+    <div class="slide-title">Days Together</div>
+</div>
+
+<div class="slide" id="slide-2">
+    <div class="slide-sub">Every word brought us closer.</div>
+    <div class="stat-number">15,403</div>
+    <div class="slide-title">Messages</div>
+</div>
+
+<div class="slide" id="slide-3">
+    <div class="slide-sub">Talking, laughing, and falling in love.</div>
+    <div class="stat-number">11,680</div>
+    <div class="slide-title">Hours</div>
+</div>
+
+<div class="slide" id="slide-4">
+    <div class="slide-title">Your most shared emotion</div>
+    <div class="stat-number">😊❤️✨</div>
+</div>
+
+<div class="slide" id="slide-5">
+    <div class="slide-title">Our favorite moment</div>
+    <div class="slide-sub">That one photo we always smile at.</div>
+</div>
+
+<div class="slide" id="slide-6">
+    <div class="slide-title">Love Compatibility</div>
+    <div class="stat-number">100%</div>
+    <div class="slide-sub">Perfect Match.</div>
+</div>
+
+<div class="slide" id="slide-7">
+    <div class="slide-title">
+        And after everything…<br>
+        I’d still choose you.<br>
+        Every single time.
+    </div>
+    <button class="next-btn" id="finishBtn" onclick="nextPage()">
+        Continue our story →
+    </button>
+</div>
+
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let currentSlide = 0;
+const TOTAL_SLIDES = slides.length;
+
+function showSlide(index) {
+    slides.forEach(s => s.classList.remove('active'));
+    slides[index].classList.add('active');
+
+    if (index === 7) {
+        setTimeout(() => {
+            document.getElementById('finishBtn').classList.add('visible');
+        }, 500);
+    }
+}
+
+function nextSlide() {
+    if (currentSlide < TOTAL_SLIDES - 1) {
+        currentSlide++;
+        showSlide(currentSlide);
+    }
+}
+
+function prevSlide() {
+    if (currentSlide > 0) {
+        currentSlide--;
+        showSlide(currentSlide);
+    }
+}
+
+/* Redirect function */
+function nextPage() {
+    document.body.style.opacity = 0;
+    setTimeout(() => {
+        window.location.href = "netflix_love_story.html";
+    }, 1000);
+}
+</script>
+
+
+</body>
+</html>

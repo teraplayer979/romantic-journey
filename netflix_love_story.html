@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Our Love Story - Loveflix Original</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-color: #141414; /* Netflix Black */
+            --brand-red: #e50914;
+            --brand-rose: #be123c;
+            --text-main: #ffffff;
+            --text-sub: #a3a3a3;
+            --glass-panel: rgba(40, 40, 40, 0.7);
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-hand: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- BACKGROUND CINEMATICS --- */
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Vignette Overlay */
+        .vignette {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, #141414 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            color: var(--brand-red);
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 0 20px 40px 20px;
+            z-index: 10;
+            background: linear-gradient(to top, #141414 10%, transparent 50%),
+                        url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80'); /* Placeholder Romantic Bg */
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Hero Content */
+        .hero-content {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeUp 1.5s ease forwards 0.5s;
+        }
+
+        .series-logo {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            line-height: 1;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .meta-data {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .match-score { color: #46d369; } /* Netflix Green */
+        .maturity-rating { border: 1px solid var(--text-sub); padding: 0 4px; font-size: 0.7rem; }
+
+        .tagline {
+            font-size: 1rem;
+            line-height: 1.4;
+            margin-bottom: 25px;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        /* Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: none;
+        }
+
+        .btn-play {
+            background: white;
+            color: black;
+        }
+
+        .btn-list {
+            background: rgba(109, 109, 110, 0.7);
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:active { transform: scale(0.95); }
+
+        /* --- TOAST MESSAGE --- */
+        .toast {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -20px);
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--brand-rose);
+            padding: 15px 25px;
+            border-radius: 50px;
+            color: white;
+            font-family: var(--font-hand);
+            font-size: 1.2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s ease;
+            z-index: 100;
+            white-space: nowrap;
+        }
+        .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+        /* --- EPISODES SECTION --- */
+        .episodes-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none; /* Hidden initially */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s, transform 1s;
+            z-index: 10;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--brand-red);
+            padding-left: 10px;
+        }
+
+        /* Season Accordion */
+        .season {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .season-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            cursor: pointer;
+        }
+
+        .season-title { font-weight: 600; font-size: 1.1rem; }
+        .dropdown-icon { transition: transform 0.3s; }
+        
+        .season-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+
+        /* Episode Item */
+        .episode {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .episode:active { background: rgba(255,255,255,0.05); }
+
+        .ep-thumb {
+            width: 120px;
+            height: 68px;
+            background: #333;
+            border-radius: 4px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ep-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+        .play-icon-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            border: 1px solid white; border-radius: 50%; padding: 5px;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .ep-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .ep-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+        .ep-desc { font-size: 0.8rem; color: var(--text-sub); line-height: 1.4; display: none; }
+        .ep-desc.visible { display: block; animation: fadeIn 0.5s; color: var(--brand-rose); }
+
+        /* --- FOOTER --- */
+        .footer-cta {
+            text-align: center;
+            padding: 60px 20px 100px 20px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .coming-soon {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-sub);
+        }
+
+        .next-btn {
+            background: var(--brand-red);
+            color: white;
+            border: none;
+            padding: 14px 36px;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(229, 9, 20, 0.4);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Helpers */
+        .hidden { display: none; }
+        .expanded .season-content { max-height: 500px; }
+        .expanded .dropdown-icon { transform: rotate(180deg); }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="navbar">
+        <div class="logo">Loveflix</div>
+        <div style="font-size: 1.2rem;">❤️</div>
+    </div>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="series-logo">Our Love Story</div>
+            
+            <div class="meta-data">
+                <span class="match-score">Perfect Match</span>
+                <span>2023</span>
+                <span class="maturity-rating">TV-MA</span>
+                <span>Limited Series</span>
+            </div>
+
+            <div class="tagline">
+                One unexpected meeting. Two stubborn hearts.<br>
+                And a story still being written.
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-play" onclick="playSeries()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    Play
+                </button>
+                <button class="btn btn-list">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    My List
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Now Streaming: Forever with you.</div>
+
+    <div class="episodes-container" id="episodesContainer">
+        
+        <div class="section-title">Episodes</div>
+
+        <div class="season expanded" id="s1">
+            <div class="season-header" onclick="toggleSeason('s1')">
+                <span class="season-title">Season 1: How It All Started</span>
+                <span class="dropdown-icon">▼</span>
+            </div>
+            <div class="season-content">
+                <div class="episode" onclick="toggleDesc(this)">
+                    <div class="ep-thumb">
+                        <img src="https://images.unsplash.com/photo-1516055203762-d99c36209d06?auto=format&fit=crop&w=200&q=60" alt="Ep1">
+                        <div class="play-icon-overlay">▶</div>
+                    </div>
+                    <div class="ep-info">
+                        <div class="ep-title">1. The First Message</div>
+                        <div class="ep-desc">The moment my life quietly changed forever. A simple notification that started it all.</div>
+                    </div>
+                </div>
+                <div class="episode" onclick="toggleDesc(this)">
+                    <div class="ep-thumb">
+                        <img src="https://images.unsplash.com/photo-1520038410233-7141dd7e6f97?auto=format&fit=crop&w=200&q=60" alt="Ep2">
+                    </div>
+                    <div class="ep-info">
+                        <div class="ep-title">2. The First Call</div>
+                        <div class="ep-desc">Hearing your voice for the first time. We talked for hours but it felt like minutes.</div>
+                    </div>
+                </div>
+                <div class="episode" onclick="toggleDesc(this)">
+                    <div class="ep-thumb">
+                        <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=200&q=60" alt="Ep3">
+                    </div>
+                    <div class="ep-info">
+                        <div class="ep-title">3. The First Laugh</div>
+                        <div class="ep-desc">That's when I knew. Your happiness became my favorite sound.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="season" id="s2">
+            <div class="season-header" onclick="toggleSeason('s2')">
+                <span class="season-title">Season 2: Falling Deeper</span>
+                <span class="dropdown-icon">▼</span>
+            </div>
+            <div class="season-content">
+                <div class="episode" onclick="toggleDesc(this)">
+                    <div class="ep-thumb"><img src="https://images.unsplash.com/photo-1484981138541-3d074aa97716?auto=format&fit=crop&w=200&q=60" alt="Ep1"></div>
+                    <div class="ep-info">
+                        <div class="ep-title">1. Late Night Talks</div>
+                        <div class="ep-desc">Secrets shared under the stars. The world slept, but we were just waking up.</div>
+                    </div>
+                </div>
+                <div class="episode" onclick="toggleDesc(this)">
+                    <div class="ep-thumb"><img src="https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?auto=format&fit=crop&w=200&q=60" alt="Ep2"></div>
+                    <div class="ep-info">
+                        <div class="ep-title">2. Realizing It's Love</div>
+                        <div class="ep-desc">It wasn't a spark, it was a realization. You are my person.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-cta" id="footerCta">
+            <div class="coming-soon">
+                Next Season:<br>
+                <span style="color:white; font-style:italic;">Forever with you.</span>
+            </div>
+            <button class="next-btn" onclick="nextPage()">Continue Watching &rarr;</button>
+        </div>
+
+    </div>
+
+    <script>
+        /* --- PARTICLES --- */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initParticles() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            particles = [];
+            for(let i=0; i<30; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 2,
+                    d: Math.random() * 0.5,
+                    o: Math.random() * 0.5
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "white";
+            
+            particles.forEach(p => {
+                p.y -= p.d; // Float up
+                p.o += (Math.random() - 0.5) * 0.02;
+                if(p.o < 0) p.o = 0; if(p.o > 0.5) p.o = 0.5;
+                if(p.y < 0) p.y = height;
+
+                ctx.globalAlpha = p.o;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(drawParticles);
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        drawParticles();
+
+        /* --- INTERACTION --- */
+        function playSeries() {
+            // Show Toast
+            const toast = document.getElementById('toast');
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+
+            // Scroll down and show episodes
+            const container = document.getElementById('episodesContainer');
+            container.style.display = 'block';
+            
+            // Allow display:block to render before fading in
+            setTimeout(() => {
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+                
+                // Show Footer after a delay
+                setTimeout(() => {
+                    document.getElementById('footerCta').style.opacity = '1';
+                }, 1000);
+
+                // Smooth Scroll
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        function toggleSeason(id) {
+            const el = document.getElementById(id);
+            // Close others (optional, typical Netflix behavior keeps them independent)
+            // Let's toggle class
+            el.classList.toggle('expanded');
+        }
+
+        function toggleDesc(element) {
+            // Find description inside clicked element
+            const desc = element.querySelector('.ep-desc');
+            const wasVisible = desc.classList.contains('visible');
+            
+            // Hide all descriptions first for cleaner UI
+            document.querySelectorAll('.ep-desc').forEach(d => d.classList.remove('visible'));
+            
+            if(!wasVisible) {
+                desc.classList.add('visible');
+            }
+        }
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                window.location.href = "google_search_compliments.html";
+            }, 1500);
+        }
+
+    </script>
+
+</body>
+</html>

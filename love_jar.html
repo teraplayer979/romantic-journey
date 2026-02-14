@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Love Jar</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 100%, #4c0519 0%, #1e1b4b 60%, #0f172a 100%);
+            --jar-glass: rgba(255, 255, 255, 0.1);
+            --jar-border: rgba(255, 255, 255, 0.3);
+            --paper-white: #fdf2f8; /* Soft pink-white */
+            --paper-yellow: #fef3c7;
+            --paper-blue: #e0f2fe;
+            --paper-gold: #fbbf24;
+            --text-hand: #881337;
+            --gold-glow: #f59e0b;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            position: absolute;
+            top: 10%;
+            text-align: center;
+            z-index: 10;
+            padding: 0 20px;
+        }
+
+        .title {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            opacity: 0;
+            animation: fadeDown 1.5s ease forwards 0.5s;
+        }
+
+        .subtitle {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            opacity: 0;
+            animation: fadeDown 1.5s ease forwards 0.8s;
+        }
+
+        /* --- THE JAR --- */
+        .jar-container {
+            position: relative;
+            width: 180px;
+            height: 240px;
+            z-index: 5;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 20px;
+        }
+
+        .jar-body {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 85%;
+            background: var(--jar-glass);
+            border: 2px solid var(--jar-border);
+            border-top: none;
+            border-radius: 10px 10px 40px 40px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.3),
+                inset 0 0 20px rgba(255,255,255,0.1);
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        /* Jar Neck/Lid */
+        .jar-neck {
+            position: absolute;
+            top: 0; left: 15%;
+            width: 70%; height: 15%;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid var(--jar-border);
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            z-index: 1;
+        }
+        
+        .jar-lid {
+            position: absolute;
+            top: -10px; left: 10%;
+            width: 80%; height: 20px;
+            background: #a1a1aa; /* Metal lid look */
+            background: linear-gradient(90deg, #71717a, #d4d4d8, #71717a);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 3;
+        }
+
+        /* Folded Notes Inside Jar */
+        .note-folded {
+            position: absolute;
+            width: 25px; height: 18px;
+            background-color: var(--paper-white);
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.5s;
+        }
+
+        /* Shake Animation */
+        .shaking {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* --- THE OPEN NOTE (OVERLAY) --- */
+        .note-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 280px;
+            background: #fff0f5;
+            padding: 30px 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            
+            /* Paper texture look */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        /* Jagged edges for paper feel */
+        .note-overlay::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: 2%; width: 96%; height: 10px;
+            background: #fff0f5;
+            transform: rotate(-1deg);
+            z-index: -1;
+        }
+
+        .note-overlay.open {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+            pointer-events: auto;
+        }
+        
+        .note-overlay.golden {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .note-text {
+            font-family: var(--font-script);
+            font-size: 1.8rem;
+            color: var(--text-hand);
+            line-height: 1.4;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease 0.3s;
+        }
+
+        .note-overlay.open .note-text { opacity: 1; transform: translateY(0); }
+
+        .close-note {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            color: rgba(0,0,0,0.4);
+            cursor: pointer;
+            margin-top: 10px;
+            border-bottom: 1px dashed rgba(0,0,0,0.2);
+        }
+
+        /* --- CONTROLS --- */
+        .controls {
+            position: absolute;
+            bottom: 15%;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pick-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .pick-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.05);
+        }
+
+        .pick-btn:active { transform: scale(0.95); }
+
+        .next-btn {
+            background: linear-gradient(135deg, #f43f5e, #fbbf24);
+            border: none;
+            color: white;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(244, 63, 94, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        .next-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0) rotate(-1deg); }
+            20%, 80% { transform: translate3d(2px, 0, 0) rotate(2deg); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0) rotate(-4deg); }
+            40%, 60% { transform: translate3d(4px, 0, 0) rotate(4deg); }
+        }
+
+        @keyframes flyOut {
+            0% { top: 60%; left: 50%; transform: translate(-50%, 0) scale(1) rotate(0deg); opacity: 1; }
+            50% { top: 40%; left: 50%; transform: translate(-50%, -50%) scale(1.2) rotate(180deg); opacity: 1; }
+            100% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(3); opacity: 0; }
+        }
+
+        .flying-note {
+            position: absolute;
+            width: 30px; height: 20px;
+            background: var(--paper-white);
+            z-index: 40;
+            animation: flyOut 0.8s ease-in-out forwards;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 6px; height: 6px;
+            background: gold;
+            position: absolute;
+            animation: fall 2s linear forwards;
+            pointer-events: none;
+            z-index: 60;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(200px) rotate(720deg); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="header">
+        <div class="title">365 reasons why I love you.</div>
+        <div class="subtitle">Pick one whenever you need a reminder.</div>
+    </div>
+
+    <div class="jar-container" id="jar">
+        <div class="jar-neck"></div>
+        <div class="jar-lid"></div>
+        <div class="jar-body" id="jarBody">
+            </div>
+    </div>
+
+    <div class="note-overlay" id="noteOverlay">
+        <div class="note-text" id="messageText">You are my favorite thought.</div>
+        <div class="close-note" onclick="closeNote()">Fold it back</div>
+    </div>
+
+    <div class="controls">
+        <button class="pick-btn" id="pickBtn" onclick="pickNote()">Pick a love note</button>
+        <button class="next-btn" id="nextBtn" onclick="nextPage()">Let's make a promise &rarr;</button>
+    </div>
+
+    <script>
+        /* --- CONFIGURATION --- */
+        const MESSAGES = [
+            "You make ordinary days feel special.",
+            "Your smile fixes everything.",
+            "Home is wherever you are.",
+            "I still get butterflies because of you.",
+            "You are the best part of my day.",
+            "I love the way you look at me.",
+            "My life is better with you in it.",
+            "You understand me like no one else."
+        ];
+
+        const GOLDEN_MESSAGE = "My favorite reason?<br><span style='font-size:2.2rem; color:#b45309;'>Because you are you.</span>";
+
+        const jarBody = document.getElementById('jarBody');
+        const jarContainer = document.getElementById('jar');
+        const pickBtn = document.getElementById('pickBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const noteOverlay = document.getElementById('noteOverlay');
+        const messageText = document.getElementById('messageText');
+
+        let notesOpened = 0;
+        const triggerGoldenAt = 4; // Show golden note on 4th try
+
+        /* --- INITIALIZE JAR CONTENTS --- */
+        function fillJar() {
+            const colors = ['var(--paper-white)', 'var(--paper-yellow)', 'var(--paper-blue)', '#fbcfe8'];
+            
+            for(let i=0; i<35; i++) {
+                const note = document.createElement('div');
+                note.classList.add('note-folded');
+                
+                // Random positioning inside jar
+                const left = Math.random() * 80 + 10; // 10% to 90%
+                const top = Math.random() * 70 + 20;  // 20% to 90%
+                const rot = Math.random() * 360;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                note.style.left = left + '%';
+                note.style.top = top + '%';
+                note.style.transform = `rotate(${rot}deg)`;
+                note.style.background = color;
+
+                jarBody.appendChild(note);
+            }
+        }
+        fillJar();
+
+        /* --- INTERACTION --- */
+        function pickNote() {
+            if(pickBtn.disabled) return;
+            pickBtn.disabled = true;
+
+            // 1. Shake Jar
+            jarContainer.classList.add('shaking');
+            
+            // Haptic
+            if(navigator.vibrate) navigator.vibrate(50);
+
+            // 2. Stop Shake & Launch Note
+            setTimeout(() => {
+                jarContainer.classList.remove('shaking');
+                launchFlyingNote();
+            }, 500);
+        }
+
+        function launchFlyingNote() {
+            // Create a temp flying element
+            const flyer = document.createElement('div');
+            flyer.classList.add('flying-note');
+            
+            // Determine if Golden
+            const isGolden = (notesOpened + 1) === triggerGoldenAt;
+            if(isGolden) flyer.style.background = 'var(--paper-gold)';
+
+            document.body.appendChild(flyer);
+
+            // Remove flying note and show modal after animation
+            setTimeout(() => {
+                flyer.remove();
+                openNoteModal(isGolden);
+            }, 750);
+        }
+
+        function openNoteModal(isGolden) {
+            notesOpened++;
+            
+            // Set Content
+            if(isGolden) {
+                noteOverlay.classList.add('golden');
+                messageText.innerHTML = GOLDEN_MESSAGE;
+                spawnConfetti();
+            } else {
+                noteOverlay.classList.remove('golden');
+                // Random message avoiding repeats if possible, but simple random for now
+                const msg = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+                messageText.innerText = msg;
+            }
+
+            // Visual Open
+            noteOverlay.classList.add('open');
+
+            // Haptic Pop
+            if(navigator.vibrate) navigator.vibrate([50, 30]);
+
+            // Reveal "Next" button if golden
+            if(isGolden) {
+                setTimeout(() => {
+                    nextBtn.classList.add('visible');
+                    pickBtn.style.opacity = 0;
+                    pickBtn.style.pointerEvents = 'none';
+                }, 1000);
+            }
+        }
+
+        function closeNote() {
+            noteOverlay.classList.remove('open');
+            setTimeout(() => {
+                pickBtn.disabled = false;
+            }, 500);
+        }
+
+        /* --- EFFECTS --- */
+        function spawnConfetti() {
+            for(let i=0; i<30; i++) {
+                const c = document.createElement('div');
+                c.classList.add('confetti');
+                c.style.left = '50%';
+                c.style.top = '50%';
+                c.style.background = ['#ffd700', '#ff69b4', '#fff'][Math.floor(Math.random()*3)];
+                
+                // Random trajectory
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 100 + 50;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                c.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
+                });
+
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 2000);
+            }
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initParticles() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            particles = [];
+            for(let i=0; i<40; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 2,
+                    speedY: Math.random() * 0.5 + 0.2,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            
+            particles.forEach(p => {
+                p.y -= p.speedY; // Float up
+                if(p.y < 0) p.y = height;
+                
+                ctx.globalAlpha = p.opacity;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        animateParticles();
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                window.location.href = "invisible_ink_message.html";
+            }, 1500);
+        }
+
+    </script>
+</body>
+</html>

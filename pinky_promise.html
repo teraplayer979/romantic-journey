@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Our Promise</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #0f172a;
+            --rose-primary: #be123c;
+            --rose-light: #fda4af;
+            --violet-glow: #7c3aed;
+            --gold-accent: #fbbf24;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 50% 0%, #312e81 0%, transparent 60%),
+                radial-gradient(circle at 50% 100%, #881337 0%, transparent 60%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            user-select: none;
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        #particle-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- MAIN CARD --- */
+        .promise-card {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 400px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: floatUp 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* --- ILLUSTRATION (SVG) --- */
+        .pinky-svg {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(253, 164, 175, 0.3));
+            transition: filter 0.5s ease;
+        }
+
+        .pinky-path {
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke 0.5s ease, stroke-width 0.5s ease;
+        }
+
+        /* Active State for SVG */
+        .promise-active .pinky-path {
+            stroke: var(--rose-light);
+            stroke-width: 4;
+        }
+        
+        .promise-complete .pinky-path {
+            stroke: var(--gold-accent);
+            filter: drop-shadow(0 0 15px var(--gold-accent));
+        }
+
+        /* --- TEXT --- */
+        .title {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 40px;
+        }
+
+        /* --- INTERACTION BUTTON --- */
+        .hold-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .hold-container:active {
+            transform: scale(0.95);
+        }
+
+        /* Progress Ring SVG */
+        .progress-ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.1s linear;
+            transform-origin: 50% 50%;
+            stroke: var(--rose-primary);
+            filter: drop-shadow(0 0 5px var(--rose-primary));
+        }
+
+        /* Inner Button */
+        .hold-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--rose-light);
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .hold-label {
+            position: absolute;
+            bottom: -30px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.5);
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        /* --- SUCCESS STATE --- */
+        .success-msg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.95); /* Cover content */
+            border-radius: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            z-index: 20;
+            padding: 20px;
+        }
+
+        .success-title {
+            font-family: var(--font-script);
+            font-size: 2.5rem;
+            color: var(--gold-accent);
+            margin-bottom: 10px;
+            transform: translateY(20px);
+            transition: transform 1s ease;
+        }
+
+        .success-sub {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        /* --- NEXT BUTTON --- */
+        .next-btn {
+            margin-top: 30px;
+            background: linear-gradient(135deg, var(--rose-primary), #e11d48);
+            border: none;
+            color: white;
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(225, 29, 72, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease 0.5s;
+        }
+
+        .next-btn.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(225, 29, 72, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+        }
+
+        .pulsing {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Sparkle Particle for Success */
+        .sparkle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--gold-accent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: explode 1s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="promise-card" id="card">
+        
+        <svg class="pinky-svg" viewBox="0 0 200 200" id="pinkySvg">
+            <path class="pinky-path" d="M 60 180 C 60 140, 90 120, 100 100 C 110 120, 80 140, 80 160" />
+            <path class="pinky-path" d="M 140 180 C 140 140, 110 120, 100 100 C 90 120, 120 140, 120 160" />
+            <circle cx="100" cy="100" r="5" fill="var(--gold-accent)" opacity="0" id="knotPoint" />
+        </svg>
+
+        <div class="title">Promise me something...</div>
+        <div class="subtitle">
+            That no matter what happens,<br>we’ll always find our way back to each other.
+        </div>
+
+        <div class="hold-container" id="holdBtn">
+            <svg class="progress-ring" width="80" height="80">
+                <circle
+                    class="progress-ring__circle"
+                    stroke="white"
+                    stroke-width="4"
+                    fill="transparent"
+                    r="38"
+                    cx="40"
+                    cy="40"
+                    style="stroke-dasharray: 238.76; stroke-dashoffset: 238.76;"
+                />
+            </svg>
+            <div class="hold-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+            </div>
+            <div class="hold-label" id="holdLabel">Hold to promise</div>
+        </div>
+
+        <div class="success-msg" id="successMsg">
+            <div class="success-title">Promise Accepted.</div>
+            <div class="success-sub">You and me... always.</div>
+            <button class="next-btn" id="nextBtn" onclick="nextPage()">Prove you're mine &rarr;</button>
+        </div>
+
+    </div>
+
+    <script>
+        /* --- CONFIGURATION --- */
+        const holdBtn = document.getElementById('holdBtn');
+        const circle = document.querySelector('.progress-ring__circle');
+        const pinkySvg = document.getElementById('pinkySvg');
+        const card = document.getElementById('card');
+        const successMsg = document.getElementById('successMsg');
+        const nextBtn = document.getElementById('nextBtn');
+        const holdLabel = document.getElementById('holdLabel');
+        const knotPoint = document.getElementById('knotPoint');
+
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+
+        let progress = 0;
+        let isHolding = false;
+        let animationFrame;
+        let isComplete = false;
+
+        /* --- INTERACTION LOGIC --- */
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function startHold(e) {
+            e.preventDefault();
+            if(isComplete) return;
+
+            isHolding = true;
+            holdBtn.classList.add('pulsing');
+            card.classList.add('promise-active');
+            holdLabel.style.opacity = 0.5;
+
+            // Haptic Start
+            if(navigator.vibrate) navigator.vibrate(50);
+
+            tick();
+        }
+
+        function endHold() {
+            if(isComplete) return;
+
+            isHolding = false;
+            holdBtn.classList.remove('pulsing');
+            card.classList.remove('promise-active');
+            holdLabel.style.opacity = 1;
+        }
+
+        function tick() {
+            if (!isHolding || isComplete) {
+                // Decay progress if released
+                if (progress > 0 && !isComplete) {
+                    progress -= 2;
+                    if (progress < 0) progress = 0;
+                    setProgress(progress);
+                    requestAnimationFrame(tick);
+                }
+                return;
+            }
+
+            // Increment Progress
+            progress += 1; // Speed of hold
+            setProgress(progress);
+
+            // Glow Intensity based on progress
+            pinkySvg.style.filter = `drop-shadow(0 0 ${10 + (progress/5)}px rgba(253, 164, 175, 0.6))`;
+
+            // Heartbeat Haptic
+            if(progress % 20 === 0 && navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+
+            if (progress >= 100) {
+                completePromise();
+            } else {
+                animationFrame = requestAnimationFrame(tick);
+            }
+        }
+
+        function completePromise() {
+            isComplete = true;
+            isHolding = false;
+            
+            // 1. Visual Finalization
+            card.classList.add('promise-complete');
+            holdBtn.classList.remove('pulsing');
+            knotPoint.style.opacity = 1;
+            knotPoint.style.transition = "opacity 0.5s ease";
+
+            // 2. Sparkle Explosion
+            spawnSparkles();
+
+            // 3. Haptic Success
+            if(navigator.vibrate) navigator.vibrate([50, 100, 50]);
+
+            // 4. Show Success Message
+            setTimeout(() => {
+                successMsg.style.opacity = 1;
+                successMsg.style.pointerEvents = 'auto';
+                
+                // Text animation
+                successMsg.querySelector('.success-title').style.transform = "translateY(0)";
+                
+                setTimeout(() => {
+                    nextBtn.classList.add('visible');
+                }, 1000);
+            }, 1000);
+        }
+
+        function spawnSparkles() {
+            const rect = holdBtn.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for(let i=0; i<30; i++) {
+                const s = document.createElement('div');
+                s.classList.add('sparkle');
+                
+                // Random Direction
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 100 + 50;
+                s.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+                s.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+                
+                s.style.left = centerX + 'px';
+                s.style.top = centerY + 'px';
+                
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 1000);
+            }
+        }
+
+        /* --- EVENT LISTENERS --- */
+        holdBtn.addEventListener('mousedown', startHold);
+        holdBtn.addEventListener('touchstart', startHold);
+        
+        window.addEventListener('mouseup', endHold);
+        window.addEventListener('touchend', endHold);
+
+        /* --- BACKGROUND PARTICLES --- */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initParticles() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            particles = [];
+            for(let i=0; i<40; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 2,
+                    speedY: Math.random() * 0.5 + 0.1,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            
+            particles.forEach(p => {
+                p.y -= p.speedY;
+                if(p.y < 0) p.y = height;
+                
+                ctx.globalAlpha = p.opacity;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(drawParticles);
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        drawParticles();
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                // Redirect to next page in sequence
+                window.location.href = "soulmate_verification.html"; 
+            }, 1500);
+        }
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Invisible Ink Message</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg-deep: #05020a;
+            --text-gold: #fbbf24;
+            --text-dim: rgba(255, 255, 255, 0.05);
+            --glow-color: #f43f5e;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-script: 'Dancing Script', cursive;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        /* --- BACKGROUND ATMOSPHERE --- */
+        #ambient-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, #05020a 90%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- UI LAYER --- */
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Top Text */
+        .intro-text {
+            position: absolute;
+            top: 15%;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 1px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeDown 2s ease forwards 0.5s;
+        }
+
+        /* --- THE MAGIC TEXT CONTAINER --- */
+        .message-container {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Layer 1: The Hint (Blurred, barely visible) */
+        .text-layer-dim {
+            position: absolute;
+            font-family: var(--font-script);
+            font-size: 2.5rem;
+            line-height: 1.6;
+            color: var(--text-dim);
+            filter: blur(8px);
+            user-select: none;
+            transition: opacity 1s;
+        }
+
+        /* Layer 2: The Gold (Hidden by mask) */
+        .text-layer-lit {
+            position: absolute;
+            font-family: var(--font-script);
+            font-size: 2.5rem;
+            line-height: 1.6;
+            color: var(--text-gold);
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            user-select: none;
+            
+            /* THE MAGIC: CSS Masking moved by JS variables */
+            --mask-x: 50%;
+            --mask-y: 50%;
+            --mask-size: 0px; /* Starts at 0, opens to 120px on touch */
+            
+            mask-image: radial-gradient(
+                circle at var(--mask-x) var(--mask-y), 
+                black 0%, 
+                transparent var(--mask-size)
+            );
+            -webkit-mask-image: radial-gradient(
+                circle at var(--mask-x) var(--mask-y), 
+                black 0%, 
+                transparent var(--mask-size)
+            );
+            
+            transition: --mask-size 0.2s ease;
+        }
+
+        .text-layer-lit.revealed {
+            --mask-size: 200% !important; /* Fully reveal */
+            mask-image: none;
+            -webkit-mask-image: none;
+            transition: opacity 2s ease;
+        }
+
+        /* --- THE GLOWING CURSOR (THE LENS) --- */
+        .magic-lens {
+            position: fixed;
+            top: 0; left: 0;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+            mix-blend-mode: screen;
+        }
+
+        .magic-lens.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* --- HINT & ENDING --- */
+        .hint-text {
+            position: absolute;
+            bottom: 25%;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: pulse 2s infinite;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .final-msg {
+            position: absolute;
+            bottom: 25%;
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--text-gold);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        .next-btn {
+            position: absolute;
+            bottom: 15%;
+            background: transparent;
+            border: 1px solid var(--glow-color);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 1s ease 0.5s;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.2);
+        }
+
+        .next-btn:hover {
+            background: var(--glow-color);
+            box-shadow: 0 0 30px rgba(244, 63, 94, 0.6);
+        }
+
+        .visible { opacity: 1 !important; transform: translateY(0) !important; pointer-events: auto !important; }
+        .hidden { opacity: 0 !important; }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 0.6; } 100% { opacity: 0.2; } }
+
+        /* Sparkle Particle */
+        .sparkle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: gold;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkleAnim 1s ease-out forwards;
+        }
+        @keyframes sparkleAnim {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2) translateY(-20px); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="ambient-canvas"></canvas>
+    <div class="vignette"></div>
+    
+    <div class="magic-lens" id="lens"></div>
+
+    <div class="ui-layer">
+        <div class="intro-text">There are things I never said out loud...</div>
+
+        <div class="message-container" id="msgContainer">
+            <div class="text-layer-dim" id="textDim">
+                You were never just a chapter in my life...<br>
+                <br>
+                You became the whole story.
+            </div>
+            
+            <div class="text-layer-lit" id="textLit">
+                You were never just a chapter in my life...<br>
+                <br>
+                You became the whole story.
+            </div>
+        </div>
+
+        <div class="hint-text" id="hint">Touch to illuminate</div>
+        
+        <div class="final-msg" id="finalMsg">Some feelings were always meant just for you.</div>
+        <button class="next-btn" id="nextBtn" onclick="nextPage()">Open the Love Jar &rarr;</button>
+    </div>
+
+    <script>
+        /* --- SETUP --- */
+        const textLit = document.getElementById('textLit');
+        const textDim = document.getElementById('textDim');
+        const lens = document.getElementById('lens');
+        const hint = document.getElementById('hint');
+        const finalMsg = document.getElementById('finalMsg');
+        const nextBtn = document.getElementById('nextBtn');
+        const container = document.getElementById('msgContainer');
+
+        let isTouch = false;
+        let revealProgress = 0;
+        let isComplete = false;
+
+        /* --- INTERACTION LOGIC --- */
+        function moveLight(x, y) {
+            if (isComplete) return;
+
+            // Move the lens UI
+            lens.style.left = x + 'px';
+            lens.style.top = y + 'px';
+
+            // Calculate position relative to the text container for the mask
+            const rect = textLit.getBoundingClientRect();
+            const relX = x - rect.left;
+            const relY = y - rect.top;
+
+            // Update CSS variables for the mask
+            textLit.style.setProperty('--mask-x', relX + 'px');
+            textLit.style.setProperty('--mask-y', relY + 'px');
+            
+            // "Turn on" the light (expand mask size)
+            textLit.style.setProperty('--mask-size', '140px'); // 140px circle of light
+            lens.classList.add('active');
+            hint.style.opacity = 0;
+
+            // Track Progress (Simple distance accumulation)
+            // If user moves inside the box, increase progress
+            if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+                revealProgress += 1;
+                
+                // Haptic feedback occasionally
+                if (revealProgress % 10 === 0 && navigator.vibrate) {
+                    navigator.vibrate(5);
+                }
+
+                // Spawn sparkles occasionally
+                if (Math.random() > 0.9) spawnSparkle(x, y);
+
+                // Check completion
+                if (revealProgress > 250) { // arbitrary threshold of movement
+                    finishExperience();
+                }
+            }
+        }
+
+        function lightOff() {
+            if (isComplete) return;
+            textLit.style.setProperty('--mask-size', '0px');
+            lens.classList.remove('active');
+        }
+
+        /* --- EVENT LISTENERS (Unified) --- */
+        document.addEventListener('mousemove', (e) => {
+            moveLight(e.clientX, e.clientY);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Stop scrolling
+            const touch = e.touches[0];
+            moveLight(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        document.addEventListener('touchend', lightOff);
+        document.addEventListener('mouseleave', lightOff);
+
+        /* --- VISUAL EFFECTS --- */
+        function spawnSparkle(x, y) {
+            const s = document.createElement('div');
+            s.classList.add('sparkle');
+            s.style.left = x + 'px';
+            s.style.top = y + 'px';
+            document.body.appendChild(s);
+            setTimeout(() => s.remove(), 1000);
+        }
+
+        function finishExperience() {
+            isComplete = true;
+            
+            // 1. Reveal Fully
+            textLit.classList.add('revealed');
+            textDim.style.opacity = 0;
+            lens.style.opacity = 0; // Hide cursor
+            
+            // 2. Haptic
+            if (navigator.vibrate) navigator.vibrate([50, 50, 100]);
+
+            // 3. Show Final UI
+            setTimeout(() => {
+                finalMsg.classList.add('visible');
+                
+                // Change background slightly to warm
+                document.body.style.background = "#0f0510";
+                document.body.style.transition = "background 3s ease";
+
+                setTimeout(() => {
+                    nextBtn.classList.add('visible');
+                }, 1500);
+            }, 1000);
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        const canvas = document.getElementById('ambient-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initParticles() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            particles = [];
+            for(let i=0; i<50; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2,
+                    speedY: Math.random() * 0.5 + 0.1,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+            
+            particles.forEach(p => {
+                p.y -= p.speedY;
+                if (p.y < 0) p.y = height;
+                
+                ctx.globalAlpha = p.opacity;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        animateParticles();
+
+        /* --- NAVIGATION --- */
+        function nextPage() {
+            document.body.style.transition = "opacity 1.5s ease";
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                window.location.href = "tinder_swipe_memories.html";
+            }, 1500);
+        }
+
+    </script>
+
+</body>
+</html>
