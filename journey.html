@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Your Love Journey</title>
+</head>
+<body style="font-family:sans-serif;text-align:center;padding:40px;">
+
+<h1 id="title">Loading...</h1>
+<p id="content"></p>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
+  authDomain: "romantic-journey-c65c9.firebaseapp.com",
+  projectId: "romantic-journey-c65c9",
+  storageBucket: "romantic-journey-c65c9.firebasestorage.app",
+  messagingSenderId: "758587730496",
+  appId: "1:758587730496:web:9e84e915296e930eb58da5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// GET ID FROM URL
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+if (!id) {
+  document.getElementById("title").innerText = "No Journey Found";
+} else {
+  const docRef = doc(db, "journeys", id);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+
+    document.getElementById("title").innerText =
+      "Hi " + (data.data?.partner_name || "Love") + " ❤️";
+
+    document.getElementById("content").innerText =
+      data.data?.mem_msg || "Our story begins...";
+  } else {
+    document.getElementById("title").innerText = "Journey Not Found";
+  }
+}
+</script>
+
+</body>
+</html>
