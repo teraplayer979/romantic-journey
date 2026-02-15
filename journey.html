@@ -1,186 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Our Journey</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400;500&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
-
-<style>
-:root{
---accent:#d63384;
---bg:linear-gradient(135deg,#ff9a9e 0%,#fecfef 100%);
---glass:rgba(255,255,255,0.75);
---font-display:'Playfair Display',serif;
---font-body:'Inter',sans-serif;
---font-script:'Dancing Script',cursive;
-}
-
-*{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-background:var(--bg);
-min-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-font-family:var(--font-body);
-padding:20px;
-}
-
-#loader{
-position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:white;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-z-index:100;
-}
-
-#content{display:none;max-width:600px;width:100%;}
-
-.card{
-background:var(--glass);
-backdrop-filter:blur(10px);
-padding:40px;
-border-radius:20px;
-text-align:center;
-box-shadow:0 10px 40px rgba(0,0,0,0.15);
-}
-
-h1{
-font-family:var(--font-display);
-font-size:2.2rem;
-margin-bottom:5px;
-}
-
-.subtitle{
-font-family:var(--font-script);
-font-size:1.5rem;
-color:var(--accent);
-margin-bottom:30px;
-}
-
-.memory{
-background:rgba(255,255,255,0.6);
-padding:15px;
-border-radius:12px;
-margin-bottom:15px;
-}
-
-.big-question{
-margin-top:30px;
-font-size:1.8rem;
-font-family:var(--font-display);
-color:var(--accent);
-}
-#error{
-display:none;
-text-align:center;
-background:white;
-padding:40px;
-border-radius:20px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Our Journey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+<body style="font-family: Arial; text-align:center; padding:40px; background:#ffe4ec;">
 
-<body>
+  <h1 id="title">Loading...</h1>
+  <p id="message"></p>
 
-<div id="loader">
-<h2>❤️ Loading your love story...</h2>
-</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-<div id="error">
-<h2>Journey Not Found</h2>
-<p>Check your link again.</p>
-</div>
+    // ✅ YOUR REAL CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
+      authDomain: "romantic-journey-c65c9.firebaseapp.com",
+      projectId: "romantic-journey-c65c9",
+      storageBucket: "romantic-journey-c65c9.firebasestorage.app",
+      messagingSenderId: "758587730496",
+      appId: "1:758587730496:web:9e84e915296e930eb58da5"
+    };
 
-<div id="content">
-<div class="card">
-<h1><span id="user_name"></span> & <span id="partner_name"></span></h1>
-<div class="subtitle">Started on <span id="start_date"></span></div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-<div class="memory">
-<strong>First Message:</strong>
-<p id="mem_msg"></p>
-</div>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-<div class="memory">
-<strong>First Date:</strong>
-<p id="mem_date"></p>
-</div>
+    if (!id) {
+      document.getElementById("title").innerText = "No ID Provided";
+      throw new Error("Missing ID");
+    }
 
-<div class="memory">
-<strong>Favorite Memory:</strong>
-<p id="mem_fav"></p>
-</div>
+    async function loadData() {
+      const docRef = doc(db, "journeys", id);
+      const docSnap = await getDoc(docRef);
 
-<div class="big-question" id="prop_question"></div>
+      if (docSnap.exists()) {
+        const data = docSnap.data();
 
-</div>
-</div>
+        document.getElementById("title").innerText =
+          "Hi " + (data.partner_name || "Love") + " ❤️";
 
-<script type="module">
+        document.getElementById("message").innerText =
+          data.prop_question || "Will you be mine forever?";
+      } else {
+        document.getElementById("title").innerText = "Journey Not Found";
+      }
+    }
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-const firebaseConfig = {
-apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
-authDomain: "romantic-journey-c65c9.firebaseapp.com",
-projectId: "romantic-journey-c65c9",
-storageBucket: "romantic-journey-c65c9.firebasestorage.app",
-messagingSenderId: "758587730496",
-appId: "1:758587730496:web:9e84e915296e930eb58da5"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const loader = document.getElementById("loader");
-const content = document.getElementById("content");
-const errorBox = document.getElementById("error");
-
-async function loadJourney() {
-try {
-
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-
-if(!id) throw new Error("No ID");
-
-const docRef = doc(db, "journeys", id);
-const snap = await getDoc(docRef);
-
-if(!snap.exists()) throw new Error("Not found");
-
-const data = snap.data();
-
-// Inject safely
-document.getElementById("user_name").innerText = data.user_name || "Me";
-document.getElementById("partner_name").innerText = data.partner_name || "You";
-document.getElementById("start_date").innerText = data.start_date || "Our Beginning";
-document.getElementById("mem_msg").innerText = data.mem_msg || "";
-document.getElementById("mem_date").innerText = data.mem_date || "";
-document.getElementById("mem_fav").innerText = data.mem_fav || "";
-document.getElementById("prop_question").innerText = data.prop_question || "Will you be mine forever?";
-
-loader.style.display = "none";
-content.style.display = "block";
-
-} catch(err){
-console.error(err);
-loader.style.display="none";
-errorBox.style.display="block";
-}
-}
-
-loadJourney();
-
-</script>
+    loadData();
+  </script>
 
 </body>
 </html>
