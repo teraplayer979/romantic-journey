@@ -1,68 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Create Your Love Story</title>
-
 <style>
 body{
-  margin:0;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#ff6a88,#ff99ac);
-  font-family:sans-serif;
-  color:white;
-  text-align:center;
+font-family:Arial;
+background:#ff9a9e;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 }
 .card{
-  background:rgba(255,255,255,0.1);
-  padding:40px;
-  border-radius:20px;
-  backdrop-filter:blur(10px);
+background:white;
+padding:30px;
+border-radius:20px;
+width:350px;
+text-align:center;
+}
+input,textarea{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
 }
 button{
-  margin-top:20px;
-  padding:14px 28px;
-  border:none;
-  border-radius:30px;
-  font-size:18px;
-  background:white;
-  color:#ff4d6d;
-  cursor:pointer;
+background:#ff4d6d;
+color:white;
+padding:10px 20px;
+border:none;
+border-radius:20px;
+cursor:pointer;
+}
+#linkBox{
+margin-top:15px;
+word-break:break-all;
+font-size:12px;
 }
 </style>
 </head>
-
 <body>
+
 <div class="card">
-  <h1>Create Your Love Story</h1>
-  <p>Build a romantic journey and share it.</p>
-  <button onclick="location.href='edit.html'">
-    Start Creating
-  </button>
+<h2>Create Your Love Story ❤️</h2>
+
+<input id="user_name" placeholder="Your Name">
+<input id="partner_name" placeholder="Partner Name">
+<textarea id="mem_msg" placeholder="First Message"></textarea>
+<input id="prop_question" value="Will you be mine forever?">
+
+<button onclick="saveData()">Save & Generate Link</button>
+
+<div id="linkBox"></div>
 </div>
 
-<script>
-(function () {
-  const params = new URLSearchParams(window.location.search);
-  const memory = params.get("memory");
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-  if (memory) {
-    try {
-      const jsonString = decodeURIComponent(atob(memory));
-      localStorage.setItem("journey_data", jsonString);
+const firebaseConfig = {
+apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
+authDomain: "romantic-journey-c65c9.firebaseapp.com",
+projectId: "romantic-journey-c65c9",
+storageBucket: "romantic-journey-c65c9.firebasestorage.app",
+messagingSenderId: "758587730496",
+appId: "1:758587730496:web:9e84e915296e930eb58da5"
+};
 
-      // 👇 YAHAN APNI FIRST STORY FILE KA NAAM LIKHO
-      window.location.href = "pinky_promise.html";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    } catch (e) {
-      console.error("Memory load failed", e);
-    }
-  }
-})();
+window.saveData = async function(){
+
+const user_name = document.getElementById("user_name").value;
+const partner_name = document.getElementById("partner_name").value;
+const mem_msg = document.getElementById("mem_msg").value;
+const prop_question = document.getElementById("prop_question").value;
+
+const docRef = await addDoc(collection(db,"journeys"),{
+user_name,
+partner_name,
+mem_msg,
+prop_question
+});
+
+const link = window.location.origin + "/journey.html?id=" + docRef.id;
+
+document.getElementById("linkBox").innerHTML =
+"Send this link:<br><a href='"+link+"' target='_blank'>"+link+"</a>";
+}
 </script>
 
 </body>
