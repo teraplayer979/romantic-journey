@@ -474,9 +474,9 @@
     </div>
 
     <div class="sticky-footer">
-        <button class="save-btn" onclick="generateLink()">
-            <span>✨ Save & Generate Link</span>
-        </button>
+        <button class="save-btn" onclick="saveAndGenerate()">
+    <span>✨ Save & Generate Link</span>
+</button>
     </div>
 
     <div class="status-indicator" id="statusIndicator">Saved</div>
@@ -494,7 +494,7 @@
     </div>
     <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
@@ -502,13 +502,33 @@
     projectId: "romantic-journey-c65c9",
     storageBucket: "romantic-journey-c65c9.firebasestorage.app",
     messagingSenderId: "758587730496",
-    appId: "1:758587730496:web:9e84e915296e930eb58da5",
-    measurementId: "G-K8CXB1MDXD"
+    appId: "1:758587730496:web:9e84e915296e930eb58da5"
   };
 
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-        alert("Firebase Connected ✅");
+  const db = getFirestore(app);
+
+  let journeyId = localStorage.getItem("journey_id");
+  if (!journeyId) {
+    journeyId = crypto.randomUUID();
+    localStorage.setItem("journey_id", journeyId);
+  }
+
+  async function saveAndGenerate() {
+    const data = {};
+    document.querySelectorAll(".data-field").forEach(el => {
+      if (el.value.trim() !== "") {
+        data[el.id] = el.value.trim();
+      }
+    });
+
+    await setDoc(doc(db, "journeys", journeyId), data);
+
+    const finalUrl = `https://romanticqt.netlify.app/index.html?id=${journeyId}`;
+    alert("Link generated:\n\n" + finalUrl);
+  }
+
+  window.saveAndGenerate = saveAndGenerate;
 </script>
 </body>
 </html>
