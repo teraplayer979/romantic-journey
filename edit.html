@@ -492,53 +492,22 @@
             <button class="copy-btn" onclick="copyLink()">Copy Link</button>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
 
-<script>
-const SUPABASE_URL = "https://ejovamwaphbetuozuhbu.supabase.co";
-const SUPABASE_KEY = "sb_publishable__oMKgMuWACyoGhJLEtnTRA_LwyOqb4O";
+  const firebaseConfig = {
+    apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
+    authDomain: "romantic-journey-c65c9.firebaseapp.com",
+    projectId: "romantic-journey-c65c9",
+    storageBucket: "romantic-journey-c65c9.firebasestorage.app",
+    messagingSenderId: "758587730496",
+    appId: "1:758587730496:web:9e84e915296e930eb58da5",
+    measurementId: "G-K8CXB1MDXD"
+  };
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Create or get journey ID
-let journeyId = localStorage.getItem("journey_id");
-if (!journeyId) {
-  journeyId = crypto.randomUUID();
-  localStorage.setItem("journey_id", journeyId);
-}
-
-// Save & Generate Link
-async function generateLink() {
-
-  const inputs = document.querySelectorAll(".data-field");
-  let data = {};
-
-  inputs.forEach(input => {
-    if (input.value.trim() !== "") {
-      data[input.id] = input.value.trim();
-    }
-  });
-
-  // Save to Supabase
-  const { error } = await supabase
-    .from("journeys1")
-    .upsert({
-      id: journeyId,
-      data: data
-    });
-
-  if (error) {
-    alert("Save failed ❌");
-    console.error(error);
-    return;
-  }
-
-  // Generate final link
-  const finalURL = window.location.origin + "/view.html?id=" + journeyId;
-
-  document.getElementById("finalLink").innerText = finalURL;
-  document.getElementById("linkModal").classList.add("active");
-}
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 </script>
 </body>
 </html>
