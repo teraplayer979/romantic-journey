@@ -1,59 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Our Journey</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Journey</title>
+<style>
+body{
+font-family:Arial;
+background:#ffc0cb;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+.card{
+background:white;
+padding:30px;
+border-radius:20px;
+width:350px;
+text-align:center;
+}
+h1{
+font-size:24px;
+}
+</style>
 </head>
-<body style="font-family: Arial; text-align:center; padding:40px; background:#ffe4ec;">
+<body>
 
-  <h1 id="title">Loading...</h1>
-  <p id="message"></p>
+<div class="card">
+<h1 id="title">Loading...</h1>
+<p id="message"></p>
+<h2 id="question"></h2>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-    // ✅ YOUR REAL CONFIG
-    const firebaseConfig = {
-      apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
-      authDomain: "romantic-journey-c65c9.firebaseapp.com",
-      projectId: "romantic-journey-c65c9",
-      storageBucket: "romantic-journey-c65c9.firebasestorage.app",
-      messagingSenderId: "758587730496",
-      appId: "1:758587730496:web:9e84e915296e930eb58da5"
-    };
+const firebaseConfig = {
+apiKey: "AIzaSyDCmtCRqCsM9g8M7qyNC2igzbn_TyH8ZYo",
+authDomain: "romantic-journey-c65c9.firebaseapp.com",
+projectId: "romantic-journey-c65c9",
+storageBucket: "romantic-journey-c65c9.firebasestorage.app",
+messagingSenderId: "758587730496",
+appId: "1:758587730496:web:9e84e915296e930eb58da5"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
 
-    if (!id) {
-      document.getElementById("title").innerText = "No ID Provided";
-      throw new Error("Missing ID");
-    }
+if(!id){
+document.getElementById("title").innerText="Journey Not Found";
+}else{
 
-    async function loadData() {
-      const docRef = doc(db, "journeys", id);
-      const docSnap = await getDoc(docRef);
+const docRef = doc(db,"journeys",id);
+const snap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+if(snap.exists()){
+const data = snap.data();
 
-        document.getElementById("title").innerText =
-          "Hi " + (data.partner_name || "Love") + " ❤️";
+document.getElementById("title").innerText =
+"Hi "+data.partner_name+" ❤️";
 
-        document.getElementById("message").innerText =
-          data.prop_question || "Will you be mine forever?";
-      } else {
-        document.getElementById("title").innerText = "Journey Not Found";
-      }
-    }
+document.getElementById("message").innerText =
+data.mem_msg;
 
-    loadData();
-  </script>
+document.getElementById("question").innerText =
+data.prop_question;
+
+}else{
+document.getElementById("title").innerText="Journey Not Found";
+}
+}
+</script>
 
 </body>
 </html>
